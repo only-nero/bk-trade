@@ -1,0 +1,16 @@
+{
+  "name": "bk-trade-site",
+  "version": "1.0.0",
+  "description": "Corporate website for ООО БК-Трейд",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.6.0",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "nodemailer": "^6.9.13"
+  }
+}
