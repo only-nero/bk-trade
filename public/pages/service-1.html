@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Помощь снабженцу организаций — БК-Трейд</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <header class="header">
+  <div class="container nav">
+    <a href="/"><img src="/assets/logo-bk-trade.svg" alt="Логотип БК-Трейд" /></a>
+    <nav class="nav-links">
+      <a href="/">Главная</a>
+      <div class="dropdown">
+        <button class="dropdown-trigger" type="button" aria-expanded="false">Услуги ▾</button>
+        <div class="dropdown-menu">
+          <a href="/uslugi/pomoshch-snabzhentsu">Помощь снабженцу организаций</a>
+          <a href="/uslugi/kompleksnoe-snabzhenie">Услуги комплексного снабжения предприятия</a>
+          <a href="/uslugi/poisk-materialov">Поиск материалов и оборудования</a>
+        </div>
+      </div>
+      <a href="/catalog">Каталог</a>
+      <a href="/about">О компании</a>
+      <a href="/contacts">Контакты</a>
+      <a class="btn btn-primary" href="/contacts">Отправить запрос</a>
+    </nav>
+    <button class="theme-toggle" data-toggle-mode aria-label="Переключить тему"><span class="sun">☀</span><span class="moon">🌙</span><span class="thumb"></span></button>
+  </div>
+</header>
+    <main class="container section">
+      <div class="breadcrumbs">Главная / Услуги / Помощь снабженцу</div>
+      <h1>Помощь снабженцу организаций</h1>
+      <p>Сервис для компаний, где закупки важны ежедневно: ускоряем обработку заявок и снижаем риски срывов поставок.</p>
+
+      <section class="card">
+        <h2>Что входит в услугу</h2>
+        <div class="accordion-item"><button class="accordion-btn">Обработка заявок и контроль статусов<span>+</span></button><div class="accordion-content"><p>Ведём трекинг каждой позиции, чтобы отдел закупок видел этап исполнения в реальном времени.</p></div></div>
+        <div class="accordion-item"><button class="accordion-btn">Подбор аналогов и оптимизация бюджета<span>+</span></button><div class="accordion-content"><p>Предлагаем взаимозаменяемые позиции по согласованным параметрам с прозрачной экономикой.</p></div></div>
+        <div class="accordion-item"><button class="accordion-btn">Документальное сопровождение<span>+</span></button><div class="accordion-content"><p>Комплектуем счета, сертификаты, паспорта и закрывающие документы без задержек.</p></div></div>
+      </section>
+
+      <h2>Кому подходит</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))">
+        <div class="card">Производственные предприятия</div>
+        <div class="card">Строительные и монтажные компании</div>
+        <div class="card">Бюджетные и коммунальные организации</div>
+      </div>
+
+      <form class="card" data-api>
+        <input name="source" value="Услуга: помощь снабженцу" type="hidden" />
+        <input name="website" class="hidden" />
+        <div class="form-grid">
+          <input name="name" required placeholder="Имя" />
+          <input name="organization" placeholder="Организация" />
+          <input name="phone" required placeholder="Телефон" />
+          <input name="email" placeholder="Email" />
+        </div>
+        <textarea name="message" placeholder="Опишите текущие закупочные задачи"></textarea>
+        <button class="btn btn-primary">Получить консультацию</button>
+        <p class="form-message"></p>
+      </form>
+    </main>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>
