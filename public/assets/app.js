@@ -88,9 +88,10 @@ if (storedMode) {
 } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
   root.dataset.mode = 'dark';
 }
+syncLogos();
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-  if (!localStorage.getItem(modeKey)) root.dataset.mode = e.matches ? 'dark' : 'light';
+  if (!localStorage.getItem(modeKey)) { root.dataset.mode = e.matches ? 'dark' : 'light'; syncLogos(); }
 });
 
 document.querySelectorAll('[data-toggle-mode]').forEach((btn) => {
@@ -98,8 +99,18 @@ document.querySelectorAll('[data-toggle-mode]').forEach((btn) => {
     const nextMode = root.dataset.mode === 'dark' ? 'light' : 'dark';
     root.dataset.mode = nextMode;
     localStorage.setItem(modeKey, nextMode);
+    syncLogos();
   });
 });
+
+
+
+function syncLogos() {
+  const dark = document.documentElement.dataset.mode === 'dark';
+  document.querySelectorAll('img[src*="logo-bk-trade"]').forEach((img) => {
+    img.src = dark ? '/assets/logo-bk-trade-dark.svg' : '/assets/logo-bk-trade.svg';
+  });
+}
 
 const cookieBanner = document.querySelector('#cookie-banner');
 if (cookieBanner && localStorage.getItem('cookies-ok') === '1') cookieBanner.remove();

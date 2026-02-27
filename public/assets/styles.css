@@ -88,13 +88,13 @@ th:last-child, td:last-child { border-radius:0 10px 10px 0; }
 .dropdown-trigger{background:none;border:none;appearance:none;-webkit-appearance:none;font:inherit;color:inherit;cursor:pointer;padding:.1rem .05rem;border-radius:8px;transition:background .2s ease}
 .dropdown-trigger:hover{background:color-mix(in srgb,var(--primary) 10%,transparent)}
 .dropdown.open .dropdown-menu{display:block}
-.theme-toggle{position:relative;display:inline-flex;align-items:center;justify-content:space-between;gap:.45rem;width:86px;min-height:36px;padding:.28rem .62rem;border-radius:999px;border:1px solid color-mix(in srgb, var(--primary) 20%, var(--border));background:color-mix(in srgb, var(--surface) 86%, transparent);cursor:pointer;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 18%, transparent);opacity:.72;transition:opacity .2s ease}
+.theme-toggle{position:relative;display:inline-flex;align-items:center;justify-content:space-between;gap:.45rem;width:86px;height:36px;padding:.28rem .62rem;border-radius:999px;border:1px solid color-mix(in srgb, var(--primary) 20%, var(--border));background:color-mix(in srgb, var(--surface) 86%, transparent);cursor:pointer;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--primary) 18%, transparent);opacity:.72;transition:opacity .2s ease;align-self:center;margin-left:.25rem;flex-shrink:0}
 .theme-toggle .sun,.theme-toggle .moon{font-size:1rem;opacity:.35;z-index:1;transition:opacity .2s ease}
-.theme-toggle .thumb{position:absolute;left:4px;top:4px;width:30px;height:30px;border-radius:50%;background:var(--primary);transition:transform .28s ease}
+.theme-toggle .thumb{position:absolute;left:4px;top:50%;width:28px;height:28px;border-radius:50%;background:var(--primary);transform:translateY(-50%);transition:transform .28s ease}
 .theme-toggle:hover{opacity:1}
 :root:not([data-mode='dark']) .theme-toggle .sun{opacity:1}
 [data-mode='dark'] .theme-toggle .moon{opacity:1}
-[data-mode='dark'] .theme-toggle .thumb{transform:translateX(38px)}
+[data-mode='dark'] .theme-toggle .thumb{transform:translate(38px,-50%)}
 
 .card h3{margin-top:.2rem}
 
