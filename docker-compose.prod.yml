@@ -6,6 +6,11 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_FILE: ${DB_FILE:-/app/data/requests.db}
+      PUBLIC_URL: ${PUBLIC_URL:-https://bk-trade.ru}
     volumes:
       - ./data:/app/data
     expose:

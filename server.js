@@ -16,6 +16,15 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const dbFile = process.env.DB_FILE || path.join(__dirname, 'data', 'requests.db');
 const db = new Database(dbFile);
 
+// DB hardening/perf for SQLite in container
+try {
+  db.pragma('journal_mode = WAL');
+  db.pragma('synchronous = NORMAL');
+  db.pragma('busy_timeout = 5000');
+} catch (e) {
+  // non-fatal
+}
+
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
@@ -83,6 +92,12 @@ const insertStmt = db.prepare(`
   INSERT INTO requests (name, organization, phone, email, message, item, source, ip, user_agent)
   VALUES (@name, @organization, @phone, @email, @message, @item, @source, @ip, @user_agent)
 `);
+const listStmt = db.prepare(`
+  SELECT id, name, organization, phone, email, message, item, source, created_at
+  FROM requests
+  ORDER BY id DESC
+  LIMIT ?
+`);
 
 const transporter = process.env.SMTP_HOST
   ? nodemailer.createTransport({
@@ -99,6 +114,7 @@ app.get('/catalog', (req, res) => res.sendFile(page('catalog')));
 app.get('/about', (req, res) => res.sendFile(page('about')));
 app.get('/contacts', (req, res) => res.sendFile(page('contacts')));
 app.get('/privacy', (req, res) => res.sendFile(page('privacy')));
+app.get('/admin/requests', (req, res) => res.sendFile(page('admin-requests')));
 app.get('/uslugi/pomoshch-snabzhentsu', (req, res) => res.sendFile(page('service-1')));
 app.get('/uslugi/kompleksnoe-snabzhenie', (req, res) => res.sendFile(page('service-2')));
 app.get('/uslugi/poisk-materialov', (req, res) => res.sendFile(page('service-3')));
@@ -132,14 +148,26 @@ app.post('/api/requests', formLimiter, (req, res) => {
     user_agent: String(req.get('user-agent') || '').slice(0, 255)
   });
 
-  transporter.sendMail({
-    from: process.env.MAIL_FROM || 'noreply@bk-trade.local',
-    to: process.env.MAIL_TO || 'sales@bk-trade.ru',
-    subject: 'Новая заявка с сайта БК-Трейд',
-    text: `Источник: ${source}\nИмя: ${name}\nОрганизация: ${organization}\nТелефон: ${phone}\nEmail: ${email}\nПозиция: ${item}\nСообщение: ${message}`
-  }).catch(() => null);
+  transporter
+    .sendMail({
+      from: process.env.MAIL_FROM || 'noreply@bk-trade.local',
+      to: process.env.MAIL_TO || 'sales@bk-trade.ru',
+      subject: 'Новая заявка с сайта БК-Трейд',
+      text: `Источник: ${source}\nИмя: ${name}\nОрганизация: ${organization}\nТелефон: ${phone}\nEmail: ${email}\nПозиция: ${item}\nСообщение: ${message}`
+    })
+    .catch(() => null);
 
   return res.json({ message: 'Спасибо! Заявка принята, менеджер свяжется с вами в течение часа.' });
+});
+
+app.get('/api/admin/requests', (req, res) => {
+  const token = String(req.get('x-admin-token') || '');
+  if (!process.env.ADMIN_API_TOKEN || token !== process.env.ADMIN_API_TOKEN) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 500);
+  return res.json({ items: listStmt.all(limit) });
 });
 
 app.get('/api/health', (req, res) => {
@@ -164,6 +192,10 @@ app.get('/robots.txt', (req, res) => {
 });
 
 app.use((req, res) => res.status(404).sendFile(page('404')));
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  res.status(500).json({ message: 'Внутренняя ошибка сервера' });
+});
 
 app.listen(port, () => {
   console.log(`BK-Trade website is running at http://localhost:${port}`);

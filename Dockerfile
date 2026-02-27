@@ -6,9 +6,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY . .
-RUN mkdir -p /app/data && chown -R node:node /app
-
-USER node
+RUN mkdir -p /app/data
 
 ENV NODE_ENV=production \
     PORT=3000 \

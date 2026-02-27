@@ -108,3 +108,29 @@ document.querySelector('#cookie-ok')?.addEventListener('click', () => {
   localStorage.setItem('cookies-ok', '1');
   cookieBanner?.remove();
 });
+
+
+const adminLoadBtn = document.querySelector('#load-requests');
+if (adminLoadBtn) {
+  adminLoadBtn.addEventListener('click', async () => {
+    const token = document.querySelector('#admin-token')?.value || '';
+    const status = document.querySelector('#admin-status');
+    const table = document.querySelector('#requests-table');
+    try {
+      const res = await fetch('/api/admin/requests?limit=200', {
+        headers: { 'x-admin-token': token }
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        status.textContent = data.message || 'Ошибка доступа';
+        return;
+      }
+      table.innerHTML = data.items
+        .map((i) => `<tr><td>${i.id}</td><td>${i.created_at}</td><td>${i.name}</td><td>${i.phone}</td><td>${i.email || ''}</td><td>${i.item || ''}</td><td>${i.source || ''}</td></tr>`)
+        .join('');
+      status.textContent = `Загружено заявок: ${data.items.length}`;
+    } catch (e) {
+      status.textContent = 'Ошибка загрузки заявок';
+    }
+  });
+}

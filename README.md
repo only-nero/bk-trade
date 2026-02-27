@@ -1,49 +1,54 @@
-# ООО «БК-Трейд» — production-ready fullstack сайт
+# ООО «БК-Трейд» — enterprise-ready fullstack сайт
 
-Корпоративный сайт для промышленного снабжения на **Node.js (Express) + SQLite + Vanilla JS/CSS**.
+Промышленный B2B-сайт на **Node.js (Express) + SQLite + Nginx + Docker Compose**.
 
-## 🚀 Что реализовано
+## Что улучшено по сравнению с базовым scaffold
 
-- Многостраничный сайт: главная, каталог, 3 страницы услуг, о компании, контакты, 404, политика ПДн.
-- Fullstack форма заявок (`POST /api/requests`) с:
-  - серверной валидацией,
-  - honeypot антиспамом,
-  - rate limiting,
-  - записью в SQLite,
-  - email-уведомлениями через SMTP (или `jsonTransport` fallback).
-- SEO/PWA: `sitemap.xml`, `robots.txt`, `manifest.json`, OG/meta.
-- Production hardening: Helmet (CSP), gzip compression, proxy support, отключен `x-powered-by`, structured logging (morgan).
-- Docker-инфраструктура для development и production (с Nginx reverse proxy).
+- Устранена критичная проблема `SQLITE_CANTOPEN` в Docker (инициализация и права на БД в entrypoint).
+- `docker compose up` теперь поднимает **web + nginx**, и сайт доступен сразу на `:80`.
+- Добавлена внутренняя **панель заявок** (`/admin/requests`) и защищённый API `GET /api/admin/requests` по токену.
+- Усилены production-настройки (Helmet CSP, rate limiting, compress, logging, static cache, SQLite pragmas).
 
 ---
 
-## 📦 Требования
+## Требования
 
 - Docker 20.10+
 - Docker Compose v2+
-- (опционально) Node.js 20+ для локального запуска без Docker
 
 ---
 
-## ⚡ Быстрый старт (Development)
+## Быстрый старт (как у INTERTEX)
+
+### 1) Подготовка конфигурации
 
 ```bash
-git clone <your-repo-url>
-cd bk-trade
 cp .env.example .env
+```
 
+Отредактируйте `.env` обязательно:
+
+- `PUBLIC_URL`
+- `ADMIN_API_TOKEN` (сложный токен)
+- SMTP-параметры (если нужна реальная отправка email)
+
+### 2) Запуск dev-стека
+
+```bash
 docker compose up -d --build
 ```
 
-Проверка:
+### 3) Проверка
 
 ```bash
 docker compose ps
 docker compose logs -f web
-curl http://localhost:3000/api/health
+curl http://localhost/api/health
 ```
 
-Остановка:
+Сайт: `http://localhost`
+
+### 4) Остановка
 
 ```bash
 docker compose down
@@ -51,57 +56,68 @@ docker compose down
 
 ---
 
-## 🌐 Production запуск (Nginx + App)
+## Production запуск
 
 ```bash
 cp .env.example .env
-# отредактируйте .env под прод
+# настройте production значения
 
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Сервисы:
-- `nginx` — внешний вход на `:80`
-- `web` — Node.js приложение (внутренний порт 3000)
-
-Логи:
+Проверка:
 
 ```bash
+docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml logs -f
+curl http://localhost/api/health
 ```
 
-Остановка:
+---
+
+## Исправление ошибки из ваших логов: SQLITE_CANTOPEN
+
+Причина: контейнер не мог открыть/создать SQLite файл (права/директория).
+
+Что сделано:
+
+1. В `entrypoint.sh` добавлена инициализация `DB_FILE`:
+   - `mkdir -p /app/data`
+   - `touch "$DB_FILE"`
+   - `chmod 0777 /app/data` и `chmod 0666 "$DB_FILE"` (для совместимости с bind mount)
+2. Убрана принудительная работа под `USER node` в Dockerfile (чтобы не ломаться на серверах с root-owned bind mount).
+3. В `docker-compose.yml` добавлен nginx на `:80`, чтобы запуск был ожидаемым для прод-сценария.
+
+---
+
+## Внутренний кабинет заявок (операционный контур)
+
+- Страница: `http://localhost/admin/requests`
+- API: `GET /api/admin/requests?limit=200`
+- Доступ: header `x-admin-token: <ADMIN_API_TOKEN>`
+
+Пример:
 
 ```bash
-docker compose -f docker-compose.prod.yml down
+curl http://localhost/api/admin/requests?limit=50 \
+  -H "x-admin-token: <your-token>"
 ```
 
 ---
 
-## 🔐 Настройка `.env`
+## .env переменные
 
-Ключевые переменные:
-
-- `NODE_ENV=production`
-- `PORT=3000`
-- `PUBLIC_URL=https://bk-trade.ru`
-- `DB_FILE=/app/data/requests.db`
-- `MAIL_FROM=noreply@bk-trade.ru`
-- `MAIL_TO=sales@bk-trade.ru`
-
-SMTP (если нужна реальная отправка email):
-
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_SECURE`
-- `SMTP_USER`
-- `SMTP_PASS`
-
-Если SMTP не задан, используется безопасный fallback `jsonTransport`.
+- `NODE_ENV` — `production`/`development`
+- `PORT` — порт web-сервиса
+- `PUBLIC_URL` — базовый URL для sitemap/robots
+- `DB_FILE` — путь до SQLite
+- `MAIL_FROM`, `MAIL_TO` — email уведомления
+- `ADMIN_API_TOKEN` — токен для внутреннего admin API
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` — SMTP
 
 ---
 
-## 🧰 Управление через Makefile
+## Управление через Makefile
 
 ```bash
 make up
@@ -115,92 +131,51 @@ make lint
 
 ---
 
-## 🛠️ Локальный запуск без Docker
+## Диагностика и устранение неполадок
 
-```bash
-npm install
-cp .env.example .env
-npm start
-```
+### Контейнер web перезапускается
 
-Проверка API:
-
-```bash
-curl http://localhost:3000/api/health
-curl -X POST http://localhost:3000/api/requests \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Тест","phone":"+79990000000","source":"manual"}'
-```
-
----
-
-## 🗄️ Данные и резервные копии
-
-SQLite хранится в `./data/requests.db` (volume в Docker).
-
-Бэкап:
-
-```bash
-cp data/requests.db backup_$(date +%Y%m%d_%H%M).db
-```
-
-Восстановление:
-
-```bash
-cp backup_YYYYMMDD_HHMM.db data/requests.db
-```
-
----
-
-## 🔎 Troubleshooting
-
-### 1) Контейнеры не стартуют
 ```bash
 docker compose ps
-docker compose logs -f
+docker compose logs -f web
 ```
 
-### 2) Ошибка отправки email
-- Проверьте SMTP переменные в `.env`
-- Убедитесь, что SMTP доступен из сети сервера
-- Смотрите логи `web`
+Если ошибка SQLite:
 
-### 3) Не сохраняются заявки
-- Проверьте права на директорию `data/`
-- Проверьте `DB_FILE` и `docker volume` монтирование
+```bash
+mkdir -p data
+chmod 777 data
+```
 
-### 4) 429 Too Many Requests
-Сработал rate limit на API. Подождите время окна и повторите.
+и перезапуск:
+
+```bash
+docker compose down
+docker compose up -d --build
+```
+
+### Порт 80 не слушает
+
+```bash
+docker compose ps
+sudo ss -ltnp 'sport = :80'
+```
+
+Убедитесь что сервис `nginx` поднят.
+
+### 401 в admin API
+
+Проверьте `ADMIN_API_TOKEN` в `.env` и заголовок `x-admin-token`.
 
 ---
 
-## 📁 Структура проекта
+## Security checklist
 
-```text
-bk-trade/
-├── public/
-│   ├── assets/
-│   └── pages/
-├── data/
-├── server.js
-├── Dockerfile
-├── docker-compose.yml
-├── docker-compose.prod.yml
-├── nginx.conf
-├── entrypoint.sh
-├── .env.example
-├── Makefile
-└── README.md
-```
-
----
-
-## ✅ Security checklist
-
-- [x] `.env` исключён из git
-- [x] `helmet` + CSP включены
-- [x] API rate limiting включён
-- [x] Honeypot антиспам включён
-- [x] Ограничен размер body payload
-- [x] `x-powered-by` отключён
+- [x] Honeypot антиспам
+- [x] API + form rate limit
+- [x] CSP/Helmet
+- [x] gzip/compression
+- [x] token-protected admin API
+- [x] ограничение body size
+- [x] логирование запросов
 
