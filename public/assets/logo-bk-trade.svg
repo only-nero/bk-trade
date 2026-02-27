@@ -1,0 +1,10 @@
+<svg width="180" height="48" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="4" width="40" height="40" rx="10" fill="var(--logo-bg, #1E3A5F)"/>
+  <path d="M12 14H21.5C26.7 14 30 16.6 30 20.5C30 23.3 28.2 25.1 25.3 25.8C28.8 26.3 31 28.3 31 31.7C31 36.1 27.4 39 21.8 39H12V14ZM20.9 24C23.5 24 25 22.8 25 20.7C25 18.7 23.5 17.6 20.9 17.6H16.7V24H20.9ZM21.5 35.4C24.5 35.4 26.2 34.1 26.2 31.8C26.2 29.4 24.5 28.2 21.5 28.2H16.7V35.4H21.5Z" fill="white"/>
+  <path d="M33 14H37.8V24.4L47.6 14H53.9L43.6 24.9L54.6 39H48.2L40.1 28.6L37.8 31V39H33V14Z" fill="white"/>
+  <path d="M66 15H101" stroke="var(--logo-bg, #1E3A5F)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M66 24H113" stroke="var(--logo-bg, #1E3A5F)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M66 33H125" stroke="var(--logo-bg, #1E3A5F)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M126 24L139 15V33L126 24Z" fill="var(--logo-accent, #4A9FD4)"/>
+  <text x="145" y="29" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="var(--logo-bg, #1E3A5F)">БК-ТРЕЙД</text>
+</svg>
