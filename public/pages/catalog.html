@@ -8,16 +8,26 @@
   </head>
   <body>
     <header class="header">
-      <div class="container nav">
-        <a href="/"><img src="/assets/logo-bk-trade.svg" alt="БК-Трейд" /></a>
-        <nav class="nav-links">
-          <a href="/">Главная</a>
-          <a href="/catalog">Каталог</a>
-          <a href="/about">О компании</a>
-          <a href="/contacts">Контакты</a>
-        </nav>
+  <div class="container nav">
+    <a href="/"><img src="/assets/logo-bk-trade.svg" alt="Логотип БК-Трейд" /></a>
+    <nav class="nav-links">
+      <a href="/">Главная</a>
+      <div class="dropdown">
+        <a href="#">Услуги ▾</a>
+        <div class="dropdown-menu">
+          <a href="/uslugi/pomoshch-snabzhentsu">Помощь снабженцу организаций</a>
+          <a href="/uslugi/kompleksnoe-snabzhenie">Услуги комплексного снабжения предприятия</a>
+          <a href="/uslugi/poisk-materialov">Поиск материалов и оборудования</a>
+        </div>
       </div>
-    </header>
+      <a href="/catalog">Каталог</a>
+      <a href="/about">О компании</a>
+      <a href="/contacts">Контакты</a>
+      <a class="btn btn-primary" href="/contacts">Отправить запрос</a>
+    </nav>
+    <button class="btn btn-ghost" data-toggle-mode>Тема</button>
+  </div>
+</header>
 
     <main class="container section">
       <div class="breadcrumbs">Главная / Каталог</div>

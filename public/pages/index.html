@@ -17,36 +17,31 @@
   </head>
   <body>
     <header class="header">
-      <div class="container nav">
-        <a href="/"><img src="/assets/logo-bk-trade.svg" alt="Логотип БК-Трейд" /></a>
-        <nav class="nav-links">
-          <a href="/">Главная</a>
-          <div class="dropdown">
-            <a href="#">Услуги ▾</a>
-            <div class="dropdown-menu">
-              <a href="/uslugi/pomoshch-snabzhentsu">Помощь снабженцу организаций</a>
-              <a href="/uslugi/kompleksnoe-snabzhenie">Услуги комплексного снабжения предприятия</a>
-              <a href="/uslugi/poisk-materialov">Поиск материалов и оборудования</a>
-            </div>
-          </div>
-          <a href="/catalog">Каталог</a>
-          <a href="/about">О компании</a>
-          <a href="/contacts">Контакты</a>
-          <a class="btn btn-primary" href="#lead-form">Отправить запрос</a>
-        </nav>
-        <div class="theme-switchers">
-          <span class="theme-chip" data-set-theme="">A</span>
-          <span class="theme-chip" data-set-theme="tech">Б</span>
-          <span class="theme-chip" data-set-theme="trust">В</span>
-          <button class="btn btn-ghost" data-toggle-mode>🌙</button>
+  <div class="container nav">
+    <a href="/"><img src="/assets/logo-bk-trade.svg" alt="Логотип БК-Трейд" /></a>
+    <nav class="nav-links">
+      <a href="/">Главная</a>
+      <div class="dropdown">
+        <a href="#">Услуги ▾</a>
+        <div class="dropdown-menu">
+          <a href="/uslugi/pomoshch-snabzhentsu">Помощь снабженцу организаций</a>
+          <a href="/uslugi/kompleksnoe-snabzhenie">Услуги комплексного снабжения предприятия</a>
+          <a href="/uslugi/poisk-materialov">Поиск материалов и оборудования</a>
         </div>
       </div>
-    </header>
+      <a href="/catalog">Каталог</a>
+      <a href="/about">О компании</a>
+      <a href="/contacts">Контакты</a>
+      <a class="btn btn-primary" href="/contacts">Отправить запрос</a>
+    </nav>
+    <button class="btn btn-ghost" data-toggle-mode>Тема</button>
+  </div>
+</header>
 
     <main>
       <section class="hero">
         <div class="container reveal">
-          <h1>Комплексное снабжение вашего предприятия — быстро, надёжно, выгодно</h1>
+          <div class="hero-badge">B2B-поставщик промышленного снабжения</div><h1>Комплексное снабжение вашего предприятия — быстро, надёжно, выгодно</h1>
           <p>
             Мы закрываем закупочные задачи в едином окне: от подбора дефицитных позиций до доставки на объект с
             подтверждёнными сроками и прозрачной экономикой каждой поставки.
@@ -92,6 +87,18 @@
             <div class="card reveal">Подбор аналогов и замещений без потери технических характеристик.</div>
             <div class="card reveal">Прозрачная спецификация и контроль бюджета закупки.</div>
             <div class="card reveal">Проверенные контрагенты и стабильный канал поставок по РФ.</div>
+          </div>
+        </div>
+      </section>
+
+      
+      <section class="section">
+        <div class="container">
+          <h2>Категории в фокусе</h2>
+          <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr))">
+            <a class="card reveal" href="/catalog"><img class="media-thumb" src="/assets/industry-1.svg" alt="Промышленное оборудование" loading="lazy" /><h3>Промышленное оборудование</h3><p>Комплексная поставка оборудования и комплектующих под производственные задачи.</p></a>
+            <a class="card reveal" href="/catalog"><img class="media-thumb" src="/assets/industry-2.svg" alt="Инструмент и расходники" loading="lazy" /><h3>Инструмент и расходники</h3><p>Ручной, электро- и пневмоинструмент, а также расходные материалы.</p></a>
+            <a class="card reveal" href="/catalog"><img class="media-thumb" src="/assets/industry-3.svg" alt="Инженерные материалы" loading="lazy" /><h3>Инженерные материалы</h3><p>Трубы, арматура, крепёж и электротехника для стабильной эксплуатации.</p></a>
           </div>
         </div>
       </section>

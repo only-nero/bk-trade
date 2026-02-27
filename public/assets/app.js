@@ -80,25 +80,24 @@ document.querySelectorAll('form[data-api]').forEach((form) => {
   });
 });
 
-const themeKey = 'bk-theme';
 const modeKey = 'bk-mode';
 const root = document.documentElement;
-const storedTheme = localStorage.getItem(themeKey);
 const storedMode = localStorage.getItem(modeKey);
-if (storedTheme) root.dataset.theme = storedTheme;
-if (storedMode) root.dataset.mode = storedMode;
+if (storedMode) {
+  root.dataset.mode = storedMode;
+} else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  root.dataset.mode = 'dark';
+}
 
-document.querySelectorAll('[data-set-theme]').forEach((chip) => {
-  chip.addEventListener('click', () => {
-    root.dataset.theme = chip.dataset.setTheme;
-    localStorage.setItem(themeKey, chip.dataset.setTheme);
-  });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  if (!localStorage.getItem(modeKey)) root.dataset.mode = e.matches ? 'dark' : 'light';
 });
 
 document.querySelectorAll('[data-toggle-mode]').forEach((btn) => {
   btn.addEventListener('click', () => {
-    root.dataset.mode = root.dataset.mode === 'dark' ? 'light' : 'dark';
-    localStorage.setItem(modeKey, root.dataset.mode);
+    const nextMode = root.dataset.mode === 'dark' ? 'light' : 'dark';
+    root.dataset.mode = nextMode;
+    localStorage.setItem(modeKey, nextMode);
   });
 });
 
@@ -108,7 +107,6 @@ document.querySelector('#cookie-ok')?.addEventListener('click', () => {
   localStorage.setItem('cookies-ok', '1');
   cookieBanner?.remove();
 });
-
 
 const adminLoadBtn = document.querySelector('#load-requests');
 if (adminLoadBtn) {
