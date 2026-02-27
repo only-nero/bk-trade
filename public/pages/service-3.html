@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Поиск материалов и оборудования — БК-Трейд</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <header class="header"><div class="container nav"><a href="/"><img src="/assets/logo-bk-trade.svg" alt="БК-Трейд" /></a></div></header>
+    <main class="container section">
+      <div class="breadcrumbs">Главная / Услуги / Поиск материалов</div>
+      <h1>Поиск материалов и оборудования</h1>
+      <p>Найдём нужные позиции даже в условиях дефицита: подключаем партнёрскую сеть поставщиков и прямых производителей.</p>
+
+      <div class="card">
+        <h2>Как работает поиск</h2>
+        <p>Вы передаёте артикул, наименование или спецификацию. Мы проверяем доступность, подбираем альтернативы и согласуем срок поставки.</p>
+      </div>
+
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))">
+        <div class="card">Экспресс-подбор за 2–4 часа</div>
+        <div class="card">Проверка соответствия ТЗ</div>
+        <div class="card">Гарантия на поставленную продукцию</div>
+      </div>
+
+      <form class="card" data-api>
+        <input name="source" value="Услуга: поиск материалов" type="hidden" />
+        <input class="hidden" name="website" />
+        <div class="form-grid">
+          <input name="item" placeholder="Артикул или наименование" required />
+          <input name="name" required placeholder="Контактное лицо" />
+          <input name="phone" required placeholder="Телефон" />
+          <input name="email" placeholder="Email" />
+        </div>
+        <textarea name="message" placeholder="Комментарий: характеристики, количество, желаемый срок"></textarea>
+        <button class="btn btn-primary">Запросить поиск позиции</button>
+        <p class="form-message"></p>
+      </form>
+    </main>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>
