@@ -11,6 +11,7 @@ services:
       PORT: 3000
       DB_FILE: ${DB_FILE:-/app/data/requests.db}
       PUBLIC_URL: ${PUBLIC_URL:-https://bk-trade.ru}
+      ENABLE_HTTPS_HEADERS: ${ENABLE_HTTPS_HEADERS:-true}
     volumes:
       - ./data:/app/data
     expose:

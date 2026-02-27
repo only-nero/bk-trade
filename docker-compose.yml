@@ -12,6 +12,7 @@ services:
       PORT: ${PORT:-3000}
       DB_FILE: ${DB_FILE:-/app/data/requests.db}
       PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
+      ENABLE_HTTPS_HEADERS: ${ENABLE_HTTPS_HEADERS:-false}
     volumes:
       - ./data:/app/data
     expose:

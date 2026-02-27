@@ -28,8 +28,11 @@ try {
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
+const enableHttpsHeaders = String(process.env.ENABLE_HTTPS_HEADERS || 'false') === 'true';
+
 app.use(
   helmet({
+    hsts: enableHttpsHeaders,
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -38,7 +41,8 @@ app.use(
         imgSrc: ["'self'", 'data:'],
         scriptSrc: ["'self'"],
         frameSrc: ["'self'", 'https://yandex.ru', 'https://*.yandex.ru'],
-        connectSrc: ["'self'"]
+        connectSrc: ["'self'"],
+        upgradeInsecureRequests: null
       }
     },
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
@@ -177,7 +181,7 @@ app.get('/api/version', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', dbFile, env: process.env.NODE_ENV || 'development' });
+  res.json({ status: 'ok', dbFile, env: process.env.NODE_ENV || 'development', httpsHeaders: enableHttpsHeaders });
 });
 
 app.get('/sitemap.xml', (req, res) => {
