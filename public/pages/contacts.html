@@ -33,10 +33,32 @@
       <h1>Контакты и реквизиты</h1>
       <div class="card">
         <p><strong>ООО «БК-Трейд»</strong></p>
+        <p>ОГРН: 1237200018175 · от 17.10.2023</p>
         <p>ИНН/КПП: 7203564245 / 720301001</p>
         <p>Юридический адрес: 625037, Тюменская область, г. Тюмень, ул. Ямская, д. 87а, офис 208</p>
+        <p>Уставный капитал: 10 000 руб.</p>
+        <p>Руководитель: директор Баев Сергей Геннадьевич (с 17.10.2023)</p>
+        <p>Статус МСП: микропредприятие (с 10.11.2023)</p>
+        <p>Основной ОКВЭД: 46.90 — Торговля оптовая неспециализированная</p>
+        <p>Налоговый орган: ИФНС России по г. Тюмени №3</p>
+        <p>ОКПО 98286726 · ОКАТО 71401364000 · ОКТМО 71701000001 · ОКОПФ 12300</p>
         <p><strong>Телефон:</strong> +7 (3452) 66-12-30 · <strong>Email:</strong> info@bk-trade72.ru</p>
       </div>
+
+      <form class="card" data-api>
+        <input name="source" value="Контакты" type="hidden" />
+        <input name="website" class="hidden" />
+        <div class="form-grid">
+          <input name="name" required placeholder="Имя" />
+          <input name="organization" placeholder="Организация" />
+          <input name="phone" required placeholder="Телефон" />
+          <input name="email" placeholder="Email" />
+        </div>
+        <textarea name="message" rows="4" placeholder="Опишите, что требуется поставить"></textarea>
+        <button class="btn btn-primary">Отправить заявку</button>
+        <p class="form-message"></p>
+      </form>
+
     </main>
     <script src="/assets/app.js"></script>
   </body>
