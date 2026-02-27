@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Контакты — БК-Трейд</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <header class="header">
+  <div class="container nav">
+    <a href="/"><img src="/assets/logo-bk-trade.svg" alt="Логотип БК-Трейд" /></a>
+    <nav class="nav-links">
+      <a href="/">Главная</a>
+      <div class="dropdown">
+        <button class="dropdown-trigger" type="button" aria-expanded="false">Услуги ▾</button>
+        <div class="dropdown-menu">
+          <a href="/uslugi/pomoshch-snabzhentsu">Помощь снабженцу организаций</a>
+          <a href="/uslugi/kompleksnoe-snabzhenie">Услуги комплексного снабжения предприятия</a>
+          <a href="/uslugi/poisk-materialov">Поиск материалов и оборудования</a>
+        </div>
+      </div>
+      <a href="/catalog">Каталог</a>
+      <a href="/about">О компании</a>
+      <a href="/contacts">Контакты</a>
+      <a class="btn btn-primary" href="/contacts">Отправить запрос</a>
+    </nav>
+    <button class="theme-toggle" data-toggle-mode aria-label="Переключить тему"><span class="sun">☀</span><span class="moon">🌙</span><span class="thumb"></span></button>
+  </div>
+</header>
+    <main class="container section">
+      <div class="breadcrumbs">Главная / Контакты</div>
+      <h1>Контакты</h1>
+      <div class="card">
+        <p><strong>ООО «БК-Трейд»</strong></p>
+        <p>ИНН 7200000000 · КПП 720001001</p>
+        <p>г. Тюмень, ул. Промышленная, 1</p>
+        <p>+7 (3452) 00-00-00 · sales@bk-trade.ru</p>
+        <p><a href="#">WhatsApp</a> · <a href="#">Telegram</a></p>
+      </div>
+
+      <form class="card" data-api>
+        <input name="source" value="Контакты" type="hidden" />
+        <input name="website" class="hidden" />
+        <div class="form-grid">
+          <input name="name" required placeholder="Имя" />
+          <input name="organization" placeholder="Организация" />
+          <input name="phone" required placeholder="Телефон" />
+          <input name="email" placeholder="Email" />
+        </div>
+        <textarea name="message" rows="4" placeholder="Сообщение"></textarea>
+        <button class="btn btn-primary">Отправить</button>
+        <p class="form-message"></p>
+      </form>
+
+      <div class="card">
+        <iframe
+          title="Карта"
+          src="https://yandex.ru/map-widget/v1/?um=constructor%3A9f3df2f832d8a5317f9"
+          width="100%"
+          height="300"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </main>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>
