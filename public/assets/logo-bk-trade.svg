@@ -1,10 +1,10 @@
-<svg width="260" height="52" viewBox="0 0 260 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="2" y="6" width="40" height="40" rx="10" fill="var(--logo-bg, #1E3A5F)"/>
-  <path d="M12 15H21.5C26.7 15 30 17.6 30 21.5C30 24.3 28.2 26.1 25.3 26.8C28.8 27.3 31 29.3 31 32.7C31 37.1 27.4 40 21.8 40H12V15ZM20.9 25C23.5 25 25 23.8 25 21.7C25 19.7 23.5 18.6 20.9 18.6H16.7V25H20.9ZM21.5 36.4C24.5 36.4 26.2 35.1 26.2 32.8C26.2 30.4 24.5 29.2 21.5 29.2H16.7V36.4H21.5Z" fill="white"/>
-  <path d="M33 15H37.8V25.4L47.6 15H53.9L43.6 25.9L54.6 40H48.2L40.1 29.6L37.8 32V40H33V15Z" fill="white"/>
-  <path d="M66 16H102" stroke="var(--logo-bg, #1E3A5F)" stroke-width="3" stroke-linecap="round"/>
-  <path d="M66 25H116" stroke="var(--logo-bg, #1E3A5F)" stroke-width="3" stroke-linecap="round"/>
-  <path d="M66 34H130" stroke="var(--logo-bg, #1E3A5F)" stroke-width="3" stroke-linecap="round"/>
-  <path d="M131 25L145 16V34L131 25Z" fill="var(--logo-accent, #4A9FD4)"/>
-  <text x="153" y="30" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" fill="var(--logo-bg, #1E3A5F)">БК-ТРЕЙД</text>
+<svg width="320" height="56" viewBox="0 0 320 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="8" width="40" height="40" rx="10" fill="var(--logo-bg, #1E3A5F)"/>
+  <path d="M12 16H21.5C26.7 16 30 18.6 30 22.5C30 25.3 28.2 27.1 25.3 27.8C28.8 28.3 31 30.3 31 33.7C31 38.1 27.4 41 21.8 41H12V16ZM20.9 26C23.5 26 25 24.8 25 22.7C25 20.7 23.5 19.6 20.9 19.6H16.7V26H20.9ZM21.5 37.4C24.5 37.4 26.2 36.1 26.2 33.8C26.2 31.4 24.5 30.2 21.5 30.2H16.7V37.4H21.5Z" fill="white"/>
+  <path d="M33 16H37.8V26.4L47.6 16H53.9L43.6 26.9L54.6 41H48.2L40.1 30.6L37.8 33V41H33V16Z" fill="white"/>
+  <path d="M66 17H108" stroke="var(--logo-bg, #1E3A5F)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M66 26H124" stroke="var(--logo-bg, #1E3A5F)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M66 35H140" stroke="var(--logo-bg, #1E3A5F)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M141 26L156 17V35L141 26Z" fill="var(--logo-accent, #4A9FD4)"/>
+  <text x="165" y="33" font-family="Manrope, Inter, Arial, sans-serif" font-size="24" font-weight="800" fill="var(--logo-bg, #1E3A5F)">БК-ТРЕЙД</text>
 </svg>

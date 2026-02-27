@@ -132,3 +132,23 @@ if (adminLoadBtn) {
     }
   });
 }
+
+
+document.querySelectorAll('.dropdown').forEach((drop) => {
+  const trigger = drop.querySelector('.dropdown-trigger');
+  if (!trigger) return;
+  trigger.addEventListener('click', (e) => {
+    e.preventDefault();
+    const isOpen = drop.classList.toggle('open');
+    trigger.setAttribute('aria-expanded', String(isOpen));
+  });
+});
+
+document.addEventListener('click', (e) => {
+  document.querySelectorAll('.dropdown.open').forEach((drop) => {
+    if (!drop.contains(e.target)) {
+      drop.classList.remove('open');
+      drop.querySelector('.dropdown-trigger')?.setAttribute('aria-expanded', 'false');
+    }
+  });
+});

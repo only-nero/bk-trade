@@ -13,7 +13,7 @@
     <nav class="nav-links">
       <a href="/">Главная</a>
       <div class="dropdown">
-        <a href="#">Услуги ▾</a>
+        <button class="dropdown-trigger" type="button" aria-expanded="false">Услуги ▾</button>
         <div class="dropdown-menu">
           <a href="/uslugi/pomoshch-snabzhentsu">Помощь снабженцу организаций</a>
           <a href="/uslugi/kompleksnoe-snabzhenie">Услуги комплексного снабжения предприятия</a>
@@ -25,7 +25,7 @@
       <a href="/contacts">Контакты</a>
       <a class="btn btn-primary" href="/contacts">Отправить запрос</a>
     </nav>
-    <button class="btn btn-ghost" data-toggle-mode>Тема</button>
+    <button class="theme-toggle" data-toggle-mode aria-label="Переключить тему"><span class="sun">☀</span><span class="moon">🌙</span><span class="thumb"></span></button>
   </div>
 </header>
     <main class="container section">
