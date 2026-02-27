@@ -170,6 +170,12 @@ app.get('/api/admin/requests', (req, res) => {
   return res.json({ items: listStmt.all(limit) });
 });
 
+
+app.get('/api/version', (req, res) => {
+  const commit = process.env.APP_COMMIT || 'dev';
+  res.json({ name: 'bk-trade', version: '1.2.0', commit });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', dbFile, env: process.env.NODE_ENV || 'development' });
 });

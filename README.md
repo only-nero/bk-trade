@@ -179,3 +179,30 @@ sudo ss -ltnp 'sport = :80'
 - [x] ограничение body size
 - [x] логирование запросов
 
+
+
+## Почему мог отображаться "голый HTML" и как исправлено
+
+По вашим логам страница `/` открывалась, но статика (CSS/JS) не всегда корректно доходила до клиента через прокси-контур.
+
+Что сделано:
+- nginx теперь отдаёт статику (`/assets/*`, `manifest.json`, `robots.txt`, `sitemap.xml`) **напрямую**, а не только через proxy в web;
+- добавлен `try_files ... @app` fallback;
+- подключён отдельный volume с `public/` в nginx (`./public:/usr/share/nginx/html:ro`).
+
+Это делает контур устойчивее и обычно полностью устраняет эффект "голого HTML".
+
+После обновления на сервере:
+
+```bash
+docker compose down
+docker compose up -d --build
+docker compose logs -f nginx web
+```
+
+Проверьте, что CSS реально доступен:
+
+```bash
+curl -I http://localhost/assets/styles.css
+curl -I http://localhost/assets/app.js
+```
