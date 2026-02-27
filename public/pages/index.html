@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
+    <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
     <header class="header">
   <div class="container nav">
     <a href="/"><img src="/assets/logo-bk-trade.svg" alt="Логотип БК-Трейд" /></a>
@@ -39,7 +40,7 @@
 </header>
 
     <main>
-      <section class="hero">
+      <section class="hero" data-hero-glow>
         <div class="container reveal">
           <div class="hero-badge">B2B-поставщик промышленного снабжения</div><h1>Комплексное снабжение вашего предприятия — быстро, надёжно, выгодно</h1>
           <p>
@@ -49,6 +50,9 @@
           <div style="display: flex; gap: 0.8rem; flex-wrap: wrap">
             <a href="#lead-form" class="btn btn-primary">Отправить заявку</a>
             <a href="/catalog" class="btn btn-ghost">Смотреть каталог</a>
+          </div>
+          <div class="hero-live">
+            В обработке прямо сейчас: <span class="visible" data-rotator data-items="заявки по промышленному оборудованию|поиск дефицитных позиций|комплектация стройплощадок|подбор аналогов под ТЗ"></span>
           </div>
           <div class="counters">
             <div class="card"><div class="counter-value" data-counter="420">0</div><small>корпоративных клиентов</small></div>
@@ -123,6 +127,26 @@
             <div class="card reveal"><h3>Металлообработка</h3><p>Снизили аварийные закупки на 34% за счёт планового пополнения критичных позиций.</p></div>
             <div class="card reveal"><h3>Строительный подряд</h3><p>Сократили срок комплектации объекта с 14 до 6 рабочих дней.</p></div>
             <div class="card reveal"><h3>Складской оператор</h3><p>Консолидировали 9 групп поставщиков в единый договор снабжения.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Что делает сервис более "живым" уже сейчас</h2>
+          <div class="insights-grid">
+            <div class="card card--lift reveal">
+              <h3>Мгновенная визуальная обратная связь</h3>
+              <p>Плавные анимации появления, счётчики и динамическая строка активности усиливают ощущение работы в реальном времени.</p>
+            </div>
+            <div class="card card--lift reveal">
+              <h3>Фокус на скорости</h3>
+              <p>Оптимизированы обработчики скролла и анимаций, чтобы интерфейс оставался отзывчивым даже на слабых устройствах.</p>
+            </div>
+            <div class="card card--lift reveal">
+              <h3>Комфорт для всех пользователей</h3>
+              <p>Учитываем системные настройки reduced motion и сохраняем удобство для пользователей с чувствительностью к анимациям.</p>
+            </div>
           </div>
         </div>
       </section>
