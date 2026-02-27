@@ -7,12 +7,13 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
-      NODE_ENV: production
-      PORT: 3000
-      DB_FILE: /app/data/requests.db
-      MAIL_TO: sales@bk-trade.ru
-      MAIL_FROM: noreply@bk-trade.local
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-3000}
+      DB_FILE: ${DB_FILE:-/app/data/requests.db}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
     volumes:
       - ./data:/app/data
     healthcheck:
