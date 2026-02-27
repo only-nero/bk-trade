@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Комплексное снабжение предприятия — БК-Трейд</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <header class="header"><div class="container nav"><a href="/"><img src="/assets/logo-bk-trade.svg" alt="БК-Трейд" /></a></div></header>
+    <main class="container section">
+      <div class="breadcrumbs">Главная / Услуги / Комплексное снабжение</div>
+      <h1>Услуги комплексного снабжения предприятия</h1>
+      <p>Выстраиваем устойчивую систему снабжения: планирование, закупки, логистика и контроль выполнения в одном контуре.</p>
+
+      <div class="card">
+        <h2>Что берём на себя</h2>
+        <ul>
+          <li>Категорийная матрица и приоритизация критичных позиций.</li>
+          <li>План-график отгрузок с резервированием товарных потоков.</li>
+          <li>Контроль уровня запасов и оперативное закрытие дефицитов.</li>
+        </ul>
+      </div>
+
+      <div class="table-wrap card">
+        <h2>Комплексный подход vs точечные закупки</h2>
+        <table>
+          <tr><th>Критерий</th><th>Комплексное снабжение</th><th>Точечные закупки</th></tr>
+          <tr><td>Сроки поставки</td><td>Фиксированные SLA и планирование</td><td>Зависимость от разовых сделок</td></tr>
+          <tr><td>Управление бюджетом</td><td>Централизованный контроль и аналитика</td><td>Разрозненные счета и сложный контроль</td></tr>
+          <tr><td>Риск дефицита</td><td>Предварительный резерв и альтернатива</td><td>Реактивный поиск в последний момент</td></tr>
+        </table>
+      </div>
+
+      <form class="card" data-api>
+        <input name="source" value="Услуга: комплексное снабжение" type="hidden" />
+        <input class="hidden" name="website" />
+        <div class="form-grid">
+          <input name="name" required placeholder="Имя" />
+          <input name="phone" required placeholder="Телефон" />
+          <input name="organization" placeholder="Организация" />
+          <input name="email" placeholder="Email" />
+        </div>
+        <textarea name="message" placeholder="Какие категории нужно взять на обслуживание?"></textarea>
+        <button class="btn btn-primary">Запросить расчёт модели снабжения</button>
+        <p class="form-message"></p>
+      </form>
+    </main>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>

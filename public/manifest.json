@@ -1,0 +1,11 @@
+{
+  "name": "БК-Трейд",
+  "short_name": "БК-Трейд",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1E3A5F",
+  "icons": [
+    { "src": "/assets/logo-bk-trade.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
