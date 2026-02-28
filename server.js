@@ -28,6 +28,10 @@ try {
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
+const localIps = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+const isLocalRequest = (ip = '') => localIps.has(String(ip));
+const suspiciousPath = /(?:^|\/)(?:wp-admin|wp-login\.php|xmlrpc\.php|vendor\/phpunit|cgi-bin|phpmyadmin|\.env|\.git)(?:$|\/)/i;
+
 const enableHttpsHeaders = String(process.env.ENABLE_HTTPS_HEADERS || 'false') === 'true';
 
 app.use(
@@ -68,12 +72,29 @@ const formLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: 'Лимит заявок превышен. Повторите попытку через 10 минут.' }
 });
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Слишком много запросов к административному API.' }
+});
 
 app.use('/api', apiLimiter);
 
 app.use((req, res, next) => {
   res.setHeader('X-Robots-Tag', 'index, follow');
   next();
+});
+
+app.use((req, res, next) => {
+  if (!['GET', 'HEAD', 'POST'].includes(req.method)) {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+  if (suspiciousPath.test(req.path)) {
+    return res.status(404).json({ message: 'Not found' });
+  }
+  return next();
 });
 
 db.exec(`
@@ -125,20 +146,23 @@ app.get('/uslugi/poisk-materialov', (req, res) => res.sendFile(page('service-3')
 
 app.post('/api/requests', formLimiter, (req, res) => {
   const payload = req.body || {};
-  const name = String(payload.name || '').trim();
-  const organization = String(payload.organization || '').trim();
-  const phone = String(payload.phone || '').trim();
-  const email = String(payload.email || '').trim().toLowerCase();
-  const message = String(payload.message || '').trim();
-  const item = String(payload.item || '').trim();
-  const source = String(payload.source || '').trim();
-  const website = String(payload.website || '').trim();
+  const clean = (value, max = 255) => String(value || '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, max);
+
+  const name = clean(payload.name, 120);
+  const organization = clean(payload.organization, 160);
+  const phone = clean(payload.phone, 30);
+  const email = clean(payload.email, 160).toLowerCase();
+  const message = clean(payload.message, 2000);
+  const item = clean(payload.item, 240);
+  const source = clean(payload.source, 120);
+  const website = clean(payload.website, 120);
 
   if (website) return res.status(400).json({ message: 'Spam protection triggered.' });
   if (name.length < 2 || name.length > 120) return res.status(400).json({ message: 'Укажите корректное имя.' });
   if (!/^\+?[\d\s\-()]{6,20}$/.test(phone)) return res.status(400).json({ message: 'Укажите корректный телефон.' });
   if (email && !/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ message: 'Некорректный email.' });
   if (message.length > 2000) return res.status(400).json({ message: 'Сообщение слишком длинное.' });
+  if (item.length > 240 || source.length > 120) return res.status(400).json({ message: 'Некорректные параметры заявки.' });
 
   insertStmt.run({
     name,
@@ -164,7 +188,7 @@ app.post('/api/requests', formLimiter, (req, res) => {
   return res.json({ message: 'Спасибо! Заявка принята, менеджер свяжется с вами в течение часа.' });
 });
 
-app.get('/api/admin/requests', (req, res) => {
+app.get('/api/admin/requests', adminLimiter, (req, res) => {
   const token = String(req.get('x-admin-token') || '');
   if (!process.env.ADMIN_API_TOKEN || token !== process.env.ADMIN_API_TOKEN) {
     return res.status(401).json({ message: 'Unauthorized' });
@@ -181,6 +205,9 @@ app.get('/api/version', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
+  if (String(process.env.ALLOW_PUBLIC_HEALTH || 'false') !== 'true' && !isLocalRequest(req.ip)) {
+    return res.status(404).json({ message: 'Not found' });
+  }
   res.json({ status: 'ok', dbFile, env: process.env.NODE_ENV || 'development', httpsHeaders: enableHttpsHeaders });
 });
 
