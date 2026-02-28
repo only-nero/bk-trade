@@ -484,7 +484,7 @@ document.addEventListener('keydown', (e) => {
 
 function initManagerChat() {
   if (document.body.dataset.managerChatReady === '1') return;
-  if (document.querySelector('#manager-chat-widget') || location.pathname.includes('/internal/ops-panel')) return;
+  if (document.querySelector('#manager-chat-widget') || document.querySelector('#admin-login-form')) return;
 
   document.body.dataset.managerChatReady = '1';
   document.body.insertAdjacentHTML('beforeend', `
@@ -539,3 +539,31 @@ function initManagerChat() {
 }
 
 initManagerChat();
+
+
+const estimator = document.querySelector('#lead-estimator');
+const estimatorResult = document.querySelector('#lead-estimator-result');
+if (estimator && estimatorResult) {
+  const variants = {
+    urgent: {
+      title: 'Срок: 2–4 часа на первичный ответ',
+      text: 'Подключаем менеджера сразу, проверяем наличие и даём 1–2 варианта решения в день обращения.'
+    },
+    planned: {
+      title: 'Срок: 1 рабочий день на расчёт',
+      text: 'Готовим детальную спецификацию, согласуем график поставки и фиксируем прозрачный бюджет закупки.'
+    },
+    complex: {
+      title: 'Срок: 1–3 дня на инженерный подбор',
+      text: 'Проверяем аналоги, риски замены и формируем согласованный комплект поставки по вашему ТЗ.'
+    }
+  };
+
+  estimator.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-estimate]');
+    if (!btn) return;
+    estimator.querySelectorAll('[data-estimate]').forEach((node) => node.classList.toggle('active', node === btn));
+    const item = variants[btn.dataset.estimate] || variants.urgent;
+    estimatorResult.innerHTML = `<strong>${item.title}</strong><p>${item.text}</p>`;
+  });
+}

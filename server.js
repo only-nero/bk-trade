@@ -48,6 +48,8 @@ const adminCookieSecure = String(process.env.ADMIN_COOKIE_SECURE || String(enabl
 const submitCooldownMs = Math.max(3, Number(process.env.REQUEST_COOLDOWN_SEC || 15)) * 1000;
 const adminSessions = new Map();
 const lastRequestByIp = new Map();
+const loginFailuresByIp = new Map();
+const adminLoginLockSec = Math.max(10, Number(process.env.ADMIN_LOGIN_LOCK_SEC || 120));
 setInterval(() => {
   const now = Date.now();
   for (const [sid, sess] of adminSessions.entries()) {
@@ -130,6 +132,12 @@ app.use(compression());
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use((req, res, next) => {
+  const reqId = crypto.randomUUID();
+  req.requestId = reqId;
+  res.setHeader('X-Request-Id', reqId);
+  next();
+});
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d', etag: true }));
 
 const apiLimiter = rateLimit({
@@ -233,7 +241,7 @@ app.get('/catalog', (req, res) => res.sendFile(page('catalog')));
 app.get('/about', (req, res) => res.sendFile(page('about')));
 app.get('/contacts', (req, res) => res.sendFile(page('contacts')));
 app.get('/privacy', (req, res) => res.sendFile(page('privacy')));
-app.get(adminUiPath, (req, res) => res.sendFile(page('admin-requests')));
+app.get(adminUiPath, (req, res) => { res.setHeader('Cache-Control', 'no-store'); return res.sendFile(page('admin-requests')); });
 app.get('/uslugi/pomoshch-snabzhentsu', (req, res) => res.sendFile(page('service-1')));
 app.get('/uslugi/kompleksnoe-snabzhenie', (req, res) => res.sendFile(page('service-2')));
 app.get('/uslugi/poisk-materialov', (req, res) => res.sendFile(page('service-3')));
@@ -296,15 +304,25 @@ app.post('/api/admin/login', adminLoginLimiter, (req, res) => {
     return res.status(503).json({ message: 'Админ-доступ не настроен на сервере.' });
   }
 
+  const ip = String(req.ip || 'unknown');
+  const state = loginFailuresByIp.get(ip) || { fails: 0, blockedUntil: 0 };
+  if (state.blockedUntil > Date.now()) {
+    return res.status(429).json({ message: 'Вход временно заблокирован для этого IP. Попробуйте позже.' });
+  }
+
   const username = String(req.body?.username || '').trim().slice(0, 80);
   const password = String(req.body?.password || '').slice(0, 160);
   const validUser = safeTokenEqual(username, adminUser);
   const validPass = safeTokenEqual(password, adminPass);
 
   if (!validUser || !validPass) {
+    const fails = (state.fails || 0) + 1;
+    const blockedUntil = fails >= 5 ? Date.now() + adminLoginLockSec * 1000 : 0;
+    loginFailuresByIp.set(ip, { fails, blockedUntil });
     return res.status(401).json({ message: 'Неверный логин или пароль.' });
   }
 
+  loginFailuresByIp.delete(ip);
   const sid = createAdminSession(username);
   res.setHeader('Set-Cookie', adminCookie(sid));
   res.setHeader('Cache-Control', 'no-store');
