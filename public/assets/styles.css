@@ -95,10 +95,7 @@ form .form-grid + .btn { margin-top: .8rem; }
 
 .form-message { margin: .65rem 0 0; min-height: 1.25rem; color: var(--muted); }
 
-.section > .card + .card,
-.section > .card + form,
-.section > form + .card,
-.section > form + form { margin-top: 1rem; }
+.section > :is(.card, .grid, form, .table-wrap) + :is(.card, .grid, form, .table-wrap) { margin-top: 1rem; }
 
 @media (max-width:980px){ .nav-links { display:none; } .mobile-cta { display:inline-flex; } }
 
