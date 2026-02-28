@@ -221,3 +221,16 @@ docker compose logs -f nginx web
 curl -I http://localhost/assets/styles.css
 curl -I http://localhost/assets/app.js
 ```
+
+
+## Nginx edge-защита от DDoS/сканеров
+
+В `nginx.conf` включены базовые защитные механики:
+
+- per-IP `limit_req` для общих запросов и более строгий лимит для `/api/*`;
+- `limit_conn` на количество одновременных соединений с одного IP;
+- ограниченные `read/send/body/header` timeouts для отсечения slowloris-паттернов;
+- блокировка типовых путей сканеров (`wp-admin`, `xmlrpc.php`, `vendor/phpunit`, `.env`, `cgi-bin` и т.д.);
+- закрытие публичного доступа к `/api/health` на уровне Nginx (только localhost).
+
+Для production рекомендуется дополнительно поставить внешний L3/L4/L7 shield (Cloudflare, DDoS-Guard, Yandex Cloud Smart Web Security и т.п.).
