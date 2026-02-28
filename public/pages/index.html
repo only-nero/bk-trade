@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
+    <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
     <header class="header">
   <div class="container nav">
     <a href="/"><img src="/assets/logo-bk-trade.svg" alt="Логотип БК-Трейд" /></a>
@@ -39,7 +40,7 @@
 </header>
 
     <main>
-      <section class="hero">
+      <section class="hero" data-hero-glow>
         <div class="container reveal">
           <div class="hero-badge">B2B-поставщик промышленного снабжения</div><h1>Комплексное снабжение вашего предприятия — быстро, надёжно, выгодно</h1>
           <p>
@@ -49,6 +50,9 @@
           <div style="display: flex; gap: 0.8rem; flex-wrap: wrap">
             <a href="#lead-form" class="btn btn-primary">Отправить заявку</a>
             <a href="/catalog" class="btn btn-ghost">Смотреть каталог</a>
+          </div>
+          <div class="hero-live">
+            В обработке прямо сейчас: <span class="visible" data-rotator data-items="заявки по промышленному оборудованию|поиск дефицитных позиций|комплектация стройплощадок|подбор аналогов под ТЗ"></span>
           </div>
           <div class="counters">
             <div class="card"><div class="counter-value" data-counter="420">0</div><small>корпоративных клиентов</small></div>
@@ -126,6 +130,8 @@
           </div>
         </div>
       </section>
+
+      
 
       <section class="section" id="lead-form">
         <div class="container card">
