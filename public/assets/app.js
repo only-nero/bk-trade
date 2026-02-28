@@ -144,6 +144,18 @@ if (adminLoadBtn || adminLoginForm) {
   const adminPanel = document.querySelector('#admin-panel');
   const authCard = document.querySelector('#admin-auth-card');
   const sessionUser = document.querySelector('#admin-session-user');
+  const statusFilters = document.querySelector('#admin-status-filters');
+  const counters = {
+    all: document.querySelector('#count-all'),
+    new: document.querySelector('#count-new'),
+    in_progress: document.querySelector('#count-in-progress'),
+    done: document.querySelector('#count-done')
+  };
+
+  let activeFilter = 'all';
+  let cachedItems = [];
+
+  const statusText = (value) => (value === 'done' ? 'Закрыта' : value === 'in_progress' ? 'В работе' : 'Новая');
 
   const renderRows = (items) => {
     table.innerHTML = '';
@@ -158,38 +170,71 @@ if (adminLoadBtn || adminLoginForm) {
       const statusTd = document.createElement('td');
       const badge = document.createElement('span');
       badge.className = `status-badge status-${item.status || 'new'}`;
-      badge.textContent = item.status === 'done' ? 'Закрыта' : item.status === 'in_progress' ? 'В работе' : 'Новая';
+      badge.textContent = statusText(item.status || 'new');
       statusTd.appendChild(badge);
       tr.appendChild(statusTd);
 
       const actionsTd = document.createElement('td');
-      const editBtn = document.createElement('button');
-      editBtn.type = 'button';
-      editBtn.className = 'btn btn-ghost';
-      editBtn.textContent = 'Статус';
-      editBtn.addEventListener('click', async () => {
-        const nextStatus = prompt('Статус заявки: new, in_progress, done', item.status || 'new');
-        if (!nextStatus) return;
-        const note = prompt('Комментарий менеджера (необязательно):', item.manager_note || '') || '';
-        try {
-          const res = await fetch(`/api/admin/requests/${item.id}/status`, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: nextStatus.trim(), manager_note: note })
-          });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(data.message || 'Не удалось обновить статус');
-          await loadAdminRequests();
-        } catch (e) {
-          if (status) status.textContent = e.message || 'Ошибка обновления статуса';
-        }
+      const group = document.createElement('div');
+      group.className = 'status-actions';
+      [
+        { key: 'new', label: 'Новая' },
+        { key: 'in_progress', label: 'В работу' },
+        { key: 'done', label: 'Закрыть' }
+      ].forEach((action) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `btn btn-ghost status-btn ${item.status === action.key ? 'active' : ''}`;
+        btn.textContent = action.label;
+        btn.disabled = item.status === action.key;
+        btn.addEventListener('click', async () => {
+          const note = prompt('Комментарий менеджера (необязательно):', item.manager_note || '') || '';
+          try {
+            const res = await fetch(`/api/admin/requests/${item.id}/status`, {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: action.key, manager_note: note })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.message || 'Не удалось обновить статус');
+            if (status) status.textContent = `Заявка #${item.id}: статус «${statusText(action.key)}» сохранён.`;
+            await loadAdminRequests();
+          } catch (e) {
+            if (status) status.textContent = e.message || 'Ошибка обновления статуса';
+          }
+        });
+        group.appendChild(btn);
       });
-      actionsTd.appendChild(editBtn);
+      actionsTd.appendChild(group);
       tr.appendChild(actionsTd);
 
       table.appendChild(tr);
     });
+
+    if (!items.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 9;
+      td.textContent = 'Заявки по выбранному фильтру не найдены.';
+      tr.appendChild(td);
+      table.appendChild(tr);
+    }
+  };
+
+  const renderFiltered = () => {
+    const filtered = activeFilter === 'all' ? cachedItems : cachedItems.filter((i) => (i.status || 'new') === activeFilter);
+    renderRows(filtered);
+  };
+
+  const updateCounters = () => {
+    const c = {
+      all: cachedItems.length,
+      new: cachedItems.filter((i) => (i.status || 'new') === 'new').length,
+      in_progress: cachedItems.filter((i) => i.status === 'in_progress').length,
+      done: cachedItems.filter((i) => i.status === 'done').length
+    };
+    Object.entries(c).forEach(([k, v]) => { if (counters[k]) counters[k].textContent = String(v); });
   };
 
   const setAuthorized = (isAuthorized, username = '') => {
@@ -202,8 +247,10 @@ if (adminLoadBtn || adminLoginForm) {
     const res = await fetch('/api/admin/requests?limit=200', { credentials: 'same-origin' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Ошибка доступа');
-    renderRows(data.items || []);
-    if (status) status.textContent = `Загружено заявок: ${data.items.length}`;
+    cachedItems = data.items || [];
+    updateCounters();
+    renderFiltered();
+    if (status) status.textContent = `Загружено заявок: ${cachedItems.length}`;
   };
 
   const checkSession = async () => {
@@ -220,6 +267,14 @@ if (adminLoadBtn || adminLoginForm) {
       setAuthorized(false);
     }
   };
+
+  statusFilters?.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-filter]');
+    if (!btn) return;
+    activeFilter = btn.dataset.filter;
+    statusFilters.querySelectorAll('button[data-filter]').forEach((node) => node.classList.toggle('active', node === btn));
+    renderFiltered();
+  });
 
   adminLoginForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -267,13 +322,16 @@ if (adminLoadBtn || adminLoginForm) {
       await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' });
     } finally {
       setAuthorized(false);
-      if (status) status.textContent = 'Вы вышли из кабинета.';
+      cachedItems = [];
+      updateCounters();
       table.innerHTML = '';
+      if (status) status.textContent = 'Вы вышли из кабинета.';
     }
   });
 
   checkSession();
 }
+
 
 
 document.querySelectorAll('.dropdown').forEach((drop) => {
