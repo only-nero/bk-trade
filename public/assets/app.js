@@ -145,17 +145,31 @@ if (adminLoadBtn || adminLoginForm) {
   const authCard = document.querySelector('#admin-auth-card');
   const sessionUser = document.querySelector('#admin-session-user');
   const statusFilters = document.querySelector('#admin-status-filters');
+  const adminSearch = document.querySelector('#admin-search');
   const counters = {
     all: document.querySelector('#count-all'),
     new: document.querySelector('#count-new'),
     in_progress: document.querySelector('#count-in-progress'),
     done: document.querySelector('#count-done')
   };
+  const kpis = {
+    total: document.querySelector('#kpi-total'),
+    open: document.querySelector('#kpi-open'),
+    closed: document.querySelector('#kpi-closed'),
+    today: document.querySelector('#kpi-today')
+  };
 
   let activeFilter = 'all';
+  let searchTerm = '';
   let cachedItems = [];
 
   const statusText = (value) => (value === 'done' ? 'Закрыта' : value === 'in_progress' ? 'В работе' : 'Новая');
+
+  const setAuthorized = (isAuthorized, username = '') => {
+    authCard?.classList.toggle('hidden', isAuthorized);
+    adminPanel?.classList.toggle('hidden', !isAuthorized);
+    if (sessionUser && username) sessionUser.textContent = username;
+  };
 
   const renderRows = (items) => {
     table.innerHTML = '';
@@ -177,6 +191,14 @@ if (adminLoadBtn || adminLoginForm) {
       const actionsTd = document.createElement('td');
       const group = document.createElement('div');
       group.className = 'status-actions';
+
+      const noteInput = document.createElement('input');
+      noteInput.className = 'admin-note-input';
+      noteInput.placeholder = 'Заметка';
+      noteInput.value = item.manager_note || '';
+      noteInput.maxLength = 400;
+      group.appendChild(noteInput);
+
       [
         { key: 'new', label: 'Новая' },
         { key: 'in_progress', label: 'В работу' },
@@ -188,13 +210,12 @@ if (adminLoadBtn || adminLoginForm) {
         btn.textContent = action.label;
         btn.disabled = item.status === action.key;
         btn.addEventListener('click', async () => {
-          const note = prompt('Комментарий менеджера (необязательно):', item.manager_note || '') || '';
           try {
             const res = await fetch(`/api/admin/requests/${item.id}/status`, {
               method: 'POST',
               credentials: 'same-origin',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ status: action.key, manager_note: note })
+              body: JSON.stringify({ status: action.key, manager_note: noteInput.value || '' })
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.message || 'Не удалось обновить статус');
@@ -206,6 +227,29 @@ if (adminLoadBtn || adminLoginForm) {
         });
         group.appendChild(btn);
       });
+
+      const noteBtn = document.createElement('button');
+      noteBtn.type = 'button';
+      noteBtn.className = 'btn btn-ghost status-btn';
+      noteBtn.textContent = 'Сохранить заметку';
+      noteBtn.addEventListener('click', async () => {
+        try {
+          const res = await fetch(`/api/admin/requests/${item.id}/status`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: item.status || 'new', manager_note: noteInput.value || '' })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.message || 'Не удалось сохранить заметку');
+          if (status) status.textContent = `Заявка #${item.id}: заметка сохранена.`;
+          await loadAdminRequests();
+        } catch (e) {
+          if (status) status.textContent = e.message || 'Ошибка сохранения заметки';
+        }
+      });
+      group.appendChild(noteBtn);
+
       actionsTd.appendChild(group);
       tr.appendChild(actionsTd);
 
@@ -222,9 +266,15 @@ if (adminLoadBtn || adminLoginForm) {
     }
   };
 
-  const renderFiltered = () => {
-    const filtered = activeFilter === 'all' ? cachedItems : cachedItems.filter((i) => (i.status || 'new') === activeFilter);
-    renderRows(filtered);
+  const applyFilters = () => {
+    const term = searchTerm.trim().toLowerCase();
+    return cachedItems.filter((item) => {
+      const byStatus = activeFilter === 'all' ? true : (item.status || 'new') === activeFilter;
+      if (!byStatus) return false;
+      if (!term) return true;
+      const hay = [item.name, item.phone, item.email, item.item, item.source].join(' ').toLowerCase();
+      return hay.includes(term);
+    });
   };
 
   const updateCounters = () => {
@@ -235,12 +285,16 @@ if (adminLoadBtn || adminLoginForm) {
       done: cachedItems.filter((i) => i.status === 'done').length
     };
     Object.entries(c).forEach(([k, v]) => { if (counters[k]) counters[k].textContent = String(v); });
+
+    const today = new Date().toISOString().slice(0, 10);
+    if (kpis.total) kpis.total.textContent = String(c.all);
+    if (kpis.open) kpis.open.textContent = String(c.new + c.in_progress);
+    if (kpis.closed) kpis.closed.textContent = String(c.done);
+    if (kpis.today) kpis.today.textContent = String(cachedItems.filter((i) => String(i.created_at || '').startsWith(today)).length);
   };
 
-  const setAuthorized = (isAuthorized, username = '') => {
-    authCard?.classList.toggle('hidden', isAuthorized);
-    adminPanel?.classList.toggle('hidden', !isAuthorized);
-    if (sessionUser && username) sessionUser.textContent = username;
+  const renderFiltered = () => {
+    renderRows(applyFilters());
   };
 
   const loadAdminRequests = async () => {
@@ -273,6 +327,11 @@ if (adminLoadBtn || adminLoginForm) {
     if (!btn) return;
     activeFilter = btn.dataset.filter;
     statusFilters.querySelectorAll('button[data-filter]').forEach((node) => node.classList.toggle('active', node === btn));
+    renderFiltered();
+  });
+
+  adminSearch?.addEventListener('input', (e) => {
+    searchTerm = e.target.value || '';
     renderFiltered();
   });
 

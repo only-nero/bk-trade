@@ -45,7 +45,9 @@ const adminPass = String(process.env.ADMIN_PASSWORD || '').trim();
 const adminSessionTtlMs = Math.max(10, Number(process.env.ADMIN_SESSION_TTL_MIN || 480)) * 60 * 1000;
 const adminCookieName = 'bk_admin_sid';
 const adminCookieSecure = String(process.env.ADMIN_COOKIE_SECURE || String(enableHttpsHeaders)) === 'true';
+const submitCooldownMs = Math.max(3, Number(process.env.REQUEST_COOLDOWN_SEC || 15)) * 1000;
 const adminSessions = new Map();
+const lastRequestByIp = new Map();
 setInterval(() => {
   const now = Date.now();
   for (const [sid, sess] of adminSessions.entries()) {
@@ -255,6 +257,14 @@ app.post('/api/requests', formLimiter, (req, res) => {
   if (email && !/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ message: 'Некорректный email.' });
   if (message.length > 2000) return res.status(400).json({ message: 'Сообщение слишком длинное.' });
   if (item.length > 240 || source.length > 120) return res.status(400).json({ message: 'Некорректные параметры заявки.' });
+
+  const ipKey = String(req.ip || 'unknown');
+  const now = Date.now();
+  const last = lastRequestByIp.get(ipKey) || 0;
+  if (now - last < submitCooldownMs) {
+    return res.status(429).json({ message: 'Слишком частые отправки. Повторите через несколько секунд.' });
+  }
+  lastRequestByIp.set(ipKey, now);
 
   insertStmt.run({
     name,

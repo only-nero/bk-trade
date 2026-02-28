@@ -100,6 +100,12 @@ form .form-grid + .btn { margin-top: .8rem; }
 .admin-grid{display:grid;gap:.8rem;max-width:520px}
 .admin-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 
+.admin-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;margin-top:1rem}
+.admin-kpis .card{padding:.85rem 1rem}
+.admin-kpis small{color:var(--muted)}
+.admin-kpis strong{display:block;font-size:1.3rem;margin-top:.2rem}
+.admin-note-input{width:180px;max-width:100%;padding:.4rem .55rem;border-radius:10px}
+
 .status-badge{display:inline-flex;align-items:center;padding:.25rem .55rem;border-radius:999px;font-size:.8rem;font-weight:700;border:1px solid var(--border)}
 .status-new{background:color-mix(in srgb, #f59e0b 16%, transparent);color:#f59e0b}
 .status-in_progress{background:color-mix(in srgb, #38bdf8 16%, transparent);color:#38bdf8}
@@ -109,7 +115,7 @@ form .form-grid + .btn { margin-top: .8rem; }
 .status-filter-row .btn{padding:.45rem .85rem}
 .status-filter-row .btn.active{background:color-mix(in srgb,var(--accent) 18%, transparent);border-color:color-mix(in srgb,var(--accent) 50%, var(--border))}
 .status-filter-row .btn span{font-weight:800}
-.status-actions{display:flex;gap:.35rem;flex-wrap:wrap}
+.status-actions{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center}
 .status-btn{padding:.35rem .62rem;font-size:.82rem}
 .status-btn.active{border-color:color-mix(in srgb,var(--accent) 50%, var(--border));background:color-mix(in srgb,var(--accent) 14%, transparent)}
 
