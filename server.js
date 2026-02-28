@@ -125,20 +125,23 @@ app.get('/uslugi/poisk-materialov', (req, res) => res.sendFile(page('service-3')
 
 app.post('/api/requests', formLimiter, (req, res) => {
   const payload = req.body || {};
-  const name = String(payload.name || '').trim();
-  const organization = String(payload.organization || '').trim();
-  const phone = String(payload.phone || '').trim();
-  const email = String(payload.email || '').trim().toLowerCase();
-  const message = String(payload.message || '').trim();
-  const item = String(payload.item || '').trim();
-  const source = String(payload.source || '').trim();
-  const website = String(payload.website || '').trim();
+  const clean = (value, max = 255) => String(value || '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, max);
+
+  const name = clean(payload.name, 120);
+  const organization = clean(payload.organization, 160);
+  const phone = clean(payload.phone, 30);
+  const email = clean(payload.email, 160).toLowerCase();
+  const message = clean(payload.message, 2000);
+  const item = clean(payload.item, 240);
+  const source = clean(payload.source, 120);
+  const website = clean(payload.website, 120);
 
   if (website) return res.status(400).json({ message: 'Spam protection triggered.' });
   if (name.length < 2 || name.length > 120) return res.status(400).json({ message: 'Укажите корректное имя.' });
   if (!/^\+?[\d\s\-()]{6,20}$/.test(phone)) return res.status(400).json({ message: 'Укажите корректный телефон.' });
   if (email && !/^\S+@\S+\.\S+$/.test(email)) return res.status(400).json({ message: 'Некорректный email.' });
   if (message.length > 2000) return res.status(400).json({ message: 'Сообщение слишком длинное.' });
+  if (item.length > 240 || source.length > 120) return res.status(400).json({ message: 'Некорректные параметры заявки.' });
 
   insertStmt.run({
     name,
