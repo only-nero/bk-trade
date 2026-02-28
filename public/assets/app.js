@@ -249,4 +249,69 @@ document.addEventListener('keydown', (e) => {
     drop.classList.remove('open');
     drop.querySelector('.dropdown-trigger')?.setAttribute('aria-expanded', 'false');
   });
+  const chat = document.querySelector('#manager-chat-widget.open');
+  if (chat) {
+    chat.classList.remove('open');
+    chat.querySelector('.manager-chat-toggle')?.setAttribute('aria-expanded', 'false');
+    chat.querySelector('#manager-chat-panel')?.setAttribute('aria-hidden', 'true');
+  }
 });
+
+
+function initManagerChat() {
+  if (document.body.dataset.managerChatReady === '1') return;
+  if (document.querySelector('#manager-chat-widget') || location.pathname.includes('/internal/ops-panel')) return;
+
+  document.body.dataset.managerChatReady = '1';
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="manager-chat-widget" class="manager-chat" aria-live="polite">
+      <button type="button" class="manager-chat-toggle btn btn-primary" aria-expanded="false" aria-controls="manager-chat-panel">
+        <span class="manager-chat-dot" aria-hidden="true"></span>
+        Чат с менеджером
+      </button>
+      <section id="manager-chat-panel" class="manager-chat-panel card" aria-hidden="true">
+        <header class="manager-chat-head">
+          <strong>Менеджер БК-Трейд онлайн</strong>
+          <button type="button" class="manager-chat-close" aria-label="Закрыть чат">✕</button>
+        </header>
+        <p class="manager-chat-hint">Обычно отвечаем в течение 10–15 минут. Оставьте контакты — перезвоним быстрее.</p>
+        <form class="manager-chat-form" novalidate>
+          <input type="hidden" name="source" value="Виджет: чат с менеджером" />
+          <input type="hidden" name="website" value="" />
+          <input name="name" placeholder="Ваше имя" required />
+          <input name="phone" placeholder="Телефон" required />
+          <textarea name="message" rows="3" placeholder="Что требуется поставить?" required></textarea>
+          <button class="btn btn-primary" type="submit">Отправить менеджеру</button>
+          <p class="form-message"></p>
+        </form>
+      </section>
+    </div>
+  `);
+
+  const wrap = document.querySelector('#manager-chat-widget');
+  const toggle = wrap?.querySelector('.manager-chat-toggle');
+  const panel = wrap?.querySelector('#manager-chat-panel');
+  const close = wrap?.querySelector('.manager-chat-close');
+  const form = wrap?.querySelector('.manager-chat-form');
+
+  const setOpen = (open) => {
+    wrap?.classList.toggle('open', open);
+    toggle?.setAttribute('aria-expanded', String(open));
+    panel?.setAttribute('aria-hidden', String(!open));
+  };
+
+  toggle?.addEventListener('click', () => setOpen(!wrap.classList.contains('open')));
+  close?.addEventListener('click', () => setOpen(false));
+
+  form?.querySelector('.form-message')?.setAttribute('aria-live', 'polite');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    sendForm(form).then(() => {
+      if (form.querySelector('.form-message')?.textContent) setOpen(true);
+    }).catch(() => {
+      form.querySelector('.form-message').textContent = 'Сбой отправки. Напишите нам по телефону +7 (3452) 66-12-30.';
+    });
+  });
+}
+
+initManagerChat();

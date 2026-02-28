@@ -92,7 +92,7 @@ curl http://localhost/api/health
 
 ## Внутренний кабинет заявок (операционный контур)
 
-- Страница: `http://localhost/admin/requests`
+- Страница: `http://localhost${ADMIN_UI_PATH}` (по умолчанию `/internal/ops-panel`)
 - API: `GET /api/admin/requests?limit=200`
 - Доступ: header `x-admin-token: <ADMIN_API_TOKEN>`
 
@@ -113,6 +113,7 @@ curl http://localhost/api/admin/requests?limit=50 \
 - `DB_FILE` — путь до SQLite
 - `MAIL_FROM`, `MAIL_TO` — email уведомления
 - `ADMIN_API_TOKEN` — токен для внутреннего admin API
+- `ADMIN_UI_PATH` — нестандартный путь к странице менеджера/админ-панели
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` — SMTP
 
 ---
@@ -234,3 +235,10 @@ curl -I http://localhost/assets/app.js
 - закрытие публичного доступа к `/api/health` на уровне Nginx (только localhost).
 
 Для production рекомендуется дополнительно поставить внешний L3/L4/L7 shield (Cloudflare, DDoS-Guard, Yandex Cloud Smart Web Security и т.п.).
+
+
+### Рекомендация для доступа менеджера
+
+- Не используйте стандартный путь вроде `/admin` — задайте уникальный `ADMIN_UI_PATH`.
+- Держите `ADMIN_API_TOKEN` длинным (32+ символа) и меняйте его регулярно.
+- Для боевого контура лучше ограничить доступ к admin UI по IP на уровне Nginx/VPN.

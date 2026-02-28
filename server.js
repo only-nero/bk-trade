@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -31,6 +32,12 @@ app.disable('x-powered-by');
 const localIps = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 const isLocalRequest = (ip = '') => localIps.has(String(ip));
 const suspiciousPath = /(?:^|\/)(?:wp-admin|wp-login\.php|xmlrpc\.php|vendor\/phpunit|cgi-bin|phpmyadmin|\.env|\.git)(?:$|\/)/i;
+const safeTokenEqual = (left = '', right = '') => {
+  const a = Buffer.from(String(left));
+  const b = Buffer.from(String(right));
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+};
 
 const enableHttpsHeaders = String(process.env.ENABLE_HTTPS_HEADERS || 'false') === 'true';
 
@@ -134,12 +141,14 @@ const transporter = process.env.SMTP_HOST
   : nodemailer.createTransport({ jsonTransport: true });
 
 const page = (name) => path.join(__dirname, 'public', 'pages', `${name}.html`);
+const adminUiPath = process.env.ADMIN_UI_PATH || '/internal/ops-panel';
+
 app.get('/', (req, res) => res.sendFile(page('index')));
 app.get('/catalog', (req, res) => res.sendFile(page('catalog')));
 app.get('/about', (req, res) => res.sendFile(page('about')));
 app.get('/contacts', (req, res) => res.sendFile(page('contacts')));
 app.get('/privacy', (req, res) => res.sendFile(page('privacy')));
-app.get('/admin/requests', (req, res) => res.sendFile(page('admin-requests')));
+app.get(adminUiPath, (req, res) => res.sendFile(page('admin-requests')));
 app.get('/uslugi/pomoshch-snabzhentsu', (req, res) => res.sendFile(page('service-1')));
 app.get('/uslugi/kompleksnoe-snabzhenie', (req, res) => res.sendFile(page('service-2')));
 app.get('/uslugi/poisk-materialov', (req, res) => res.sendFile(page('service-3')));
@@ -190,7 +199,7 @@ app.post('/api/requests', formLimiter, (req, res) => {
 
 app.get('/api/admin/requests', adminLimiter, (req, res) => {
   const token = String(req.get('x-admin-token') || '');
-  if (!process.env.ADMIN_API_TOKEN || token !== process.env.ADMIN_API_TOKEN) {
+  if (!process.env.ADMIN_API_TOKEN || !safeTokenEqual(token, process.env.ADMIN_API_TOKEN)) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
 
