@@ -4,6 +4,7 @@ const io = new IntersectionObserver(
       if (entry.isIntersecting) {
         entry.target.classList.add('in-view');
         if (entry.target.dataset.counter) animateCounter(entry.target);
+        io.unobserve(entry.target);
       }
     });
   },
@@ -40,7 +41,7 @@ document.querySelectorAll('.accordion-btn').forEach((btn) => {
 const filterInput = document.querySelector('#catalog-filter');
 if (filterInput) {
   filterInput.addEventListener('input', (e) => {
-    const value = e.target.value.toLowerCase();
+    const value = e.target.value.trim().toLowerCase();
     document.querySelectorAll('[data-category]').forEach((card) => {
       card.classList.toggle('hidden', !card.dataset.category.includes(value));
     });
@@ -60,18 +61,34 @@ document.querySelectorAll('[data-request-item]').forEach((btn) => {
 
 async function sendForm(form) {
   const data = Object.fromEntries(new FormData(form));
-  const res = await fetch('/api/requests', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+  const submitBtn = form.querySelector('button[type="submit"], button:not([type])');
+  const message = form.querySelector('.form-message');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.dataset.defaultText = submitBtn.dataset.defaultText || submitBtn.textContent;
+    submitBtn.textContent = 'Отправка...';
+  }
 
-  const payload = await res.json();
-  form.querySelector('.form-message').textContent = payload.message;
-  if (res.ok) form.reset();
+  try {
+    const res = await fetch('/api/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const payload = await res.json();
+    if (message) message.textContent = payload.message;
+    if (res.ok) form.reset();
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitBtn.dataset.defaultText;
+    }
+  }
 }
 
 document.querySelectorAll('form[data-api]').forEach((form) => {
+  form.querySelector('.form-message')?.setAttribute('aria-live', 'polite');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     sendForm(form).catch(() => {
@@ -163,3 +180,57 @@ document.addEventListener('click', (e) => {
     }
   });
 });
+
+const progress = document.querySelector('#scroll-progress');
+if (progress) {
+  let ticking = false;
+  const updateProgress = () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const ratio = max > 0 ? (window.scrollY / max) * 100 : 0;
+    progress.style.transform = `scaleX(${Math.min(100, Math.max(0, ratio)) / 100})`;
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateProgress);
+      ticking = true;
+    }
+  }, { passive: true });
+  updateProgress();
+}
+
+const rotator = document.querySelector('[data-rotator]');
+if (rotator) {
+  const items = (rotator.dataset.items || '')
+    .split('|')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  let index = 0;
+  if (items.length) {
+    rotator.textContent = items[0];
+    setInterval(() => {
+      index = (index + 1) % items.length;
+      rotator.classList.remove('visible');
+      requestAnimationFrame(() => {
+        rotator.textContent = items[index];
+        rotator.classList.add('visible');
+      });
+    }, 3000);
+  }
+}
+
+const heroGlow = document.querySelector('[data-hero-glow]');
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (heroGlow && !prefersReducedMotion) {
+  let frame = null;
+  window.addEventListener('pointermove', (e) => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      heroGlow.style.setProperty('--pointer-x', `${x}%`);
+      heroGlow.style.setProperty('--pointer-y', `${y}%`);
+      frame = null;
+    });
+  }, { passive: true });
+}
