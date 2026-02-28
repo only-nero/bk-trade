@@ -61,18 +61,34 @@ document.querySelectorAll('[data-request-item]').forEach((btn) => {
 
 async function sendForm(form) {
   const data = Object.fromEntries(new FormData(form));
-  const res = await fetch('/api/requests', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+  const submitBtn = form.querySelector('button[type="submit"], button:not([type])');
+  const message = form.querySelector('.form-message');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.dataset.defaultText = submitBtn.dataset.defaultText || submitBtn.textContent;
+    submitBtn.textContent = 'Отправка...';
+  }
 
-  const payload = await res.json();
-  form.querySelector('.form-message').textContent = payload.message;
-  if (res.ok) form.reset();
+  try {
+    const res = await fetch('/api/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const payload = await res.json();
+    if (message) message.textContent = payload.message;
+    if (res.ok) form.reset();
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitBtn.dataset.defaultText;
+    }
+  }
 }
 
 document.querySelectorAll('form[data-api]').forEach((form) => {
+  form.querySelector('.form-message')?.setAttribute('aria-live', 'polite');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     sendForm(form).catch(() => {
