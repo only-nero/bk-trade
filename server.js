@@ -46,6 +46,12 @@ const adminSessionTtlMs = Math.max(10, Number(process.env.ADMIN_SESSION_TTL_MIN 
 const adminCookieName = 'bk_admin_sid';
 const adminCookieSecure = String(process.env.ADMIN_COOKIE_SECURE || String(enableHttpsHeaders)) === 'true';
 const adminSessions = new Map();
+setInterval(() => {
+  const now = Date.now();
+  for (const [sid, sess] of adminSessions.entries()) {
+    if (!sess || sess.expiresAt < now) adminSessions.delete(sid);
+  }
+}, 10 * 60 * 1000).unref();
 
 const parseCookies = (cookieHeader = '') => Object.fromEntries(
   String(cookieHeader || '')
@@ -57,6 +63,19 @@ const parseCookies = (cookieHeader = '') => Object.fromEntries(
       return [key, decodeURIComponent(rest.join('=') || '')];
     })
 );
+
+
+const hasTrustedOrigin = (req) => {
+  const origin = String(req.get('origin') || '');
+  const host = String(req.get('host') || '');
+  if (!origin) return true;
+  try {
+    const parsed = new URL(origin);
+    return parsed.host === host;
+  } catch {
+    return false;
+  }
+};
 
 const getAdminSession = (req) => {
   const sid = parseCookies(req.get('cookie') || '')[adminCookieName];
@@ -169,19 +188,30 @@ db.exec(`
     source TEXT,
     ip TEXT,
     user_agent TEXT,
+    status TEXT DEFAULT 'new',
+    manager_note TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )
 `);
+
+const requestColumns = db.prepare('PRAGMA table_info(requests)').all().map((c) => c.name);
+if (!requestColumns.includes('status')) db.exec("ALTER TABLE requests ADD COLUMN status TEXT DEFAULT 'new'");
+if (!requestColumns.includes('manager_note')) db.exec("ALTER TABLE requests ADD COLUMN manager_note TEXT");
 
 const insertStmt = db.prepare(`
   INSERT INTO requests (name, organization, phone, email, message, item, source, ip, user_agent)
   VALUES (@name, @organization, @phone, @email, @message, @item, @source, @ip, @user_agent)
 `);
 const listStmt = db.prepare(`
-  SELECT id, name, organization, phone, email, message, item, source, created_at
+  SELECT id, name, organization, phone, email, message, item, source, status, manager_note, created_at
   FROM requests
   ORDER BY id DESC
   LIMIT ?
+`);
+const updateStatusStmt = db.prepare(`
+  UPDATE requests
+  SET status = @status, manager_note = @manager_note
+  WHERE id = @id
 `);
 
 const transporter = process.env.SMTP_HOST
@@ -251,12 +281,13 @@ app.post('/api/requests', formLimiter, (req, res) => {
 });
 
 app.post('/api/admin/login', adminLoginLimiter, (req, res) => {
+  if (!hasTrustedOrigin(req)) return res.status(403).json({ message: 'Forbidden origin' });
   if (!adminUser || !adminPass) {
     return res.status(503).json({ message: 'Админ-доступ не настроен на сервере.' });
   }
 
-  const username = String(req.body?.username || '').trim();
-  const password = String(req.body?.password || '');
+  const username = String(req.body?.username || '').trim().slice(0, 80);
+  const password = String(req.body?.password || '').slice(0, 160);
   const validUser = safeTokenEqual(username, adminUser);
   const validPass = safeTokenEqual(password, adminPass);
 
@@ -271,6 +302,7 @@ app.post('/api/admin/login', adminLoginLimiter, (req, res) => {
 });
 
 app.post('/api/admin/logout', adminLimiter, requireAdminSession, (req, res) => {
+  if (!hasTrustedOrigin(req)) return res.status(403).json({ message: 'Forbidden origin' });
   adminSessions.delete(req.adminSession.sid);
   res.setHeader('Set-Cookie', adminCookie('', 0));
   res.setHeader('Cache-Control', 'no-store');
@@ -287,6 +319,21 @@ app.get('/api/admin/requests', adminLimiter, requireAdminSession, (req, res) => 
   return res.json({ items: listStmt.all(limit) });
 });
 
+
+app.post('/api/admin/requests/:id/status', adminLimiter, requireAdminSession, (req, res) => {
+  if (!hasTrustedOrigin(req)) return res.status(403).json({ message: 'Forbidden origin' });
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ message: 'Некорректный ID заявки.' });
+
+  const allowed = new Set(['new', 'in_progress', 'done']);
+  const status = String(req.body?.status || '').trim();
+  const manager_note = String(req.body?.manager_note || '').replace(/[\u0000-\u001F\u007F]/g, '').trim().slice(0, 400);
+  if (!allowed.has(status)) return res.status(400).json({ message: 'Некорректный статус.' });
+
+  const result = updateStatusStmt.run({ id, status, manager_note });
+  if (!result.changes) return res.status(404).json({ message: 'Заявка не найдена.' });
+  return res.json({ message: 'Статус обновлён.' });
+});
 
 app.get('/api/version', (req, res) => {
   const commit = process.env.APP_COMMIT || 'dev';

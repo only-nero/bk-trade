@@ -76,8 +76,8 @@ async function sendForm(form) {
       body: JSON.stringify(data)
     });
 
-    const payload = await res.json();
-    if (message) message.textContent = payload.message;
+    const payload = await res.json().catch(() => ({}));
+    if (message) message.textContent = payload.message || (res.ok ? 'Заявка отправлена.' : 'Ошибка отправки формы.');
     if (res.ok) form.reset();
   } finally {
     if (submitBtn) {
@@ -154,6 +154,40 @@ if (adminLoadBtn || adminLoginForm) {
         td.textContent = String(value ?? '');
         tr.appendChild(td);
       });
+
+      const statusTd = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = `status-badge status-${item.status || 'new'}`;
+      badge.textContent = item.status === 'done' ? 'Закрыта' : item.status === 'in_progress' ? 'В работе' : 'Новая';
+      statusTd.appendChild(badge);
+      tr.appendChild(statusTd);
+
+      const actionsTd = document.createElement('td');
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'btn btn-ghost';
+      editBtn.textContent = 'Статус';
+      editBtn.addEventListener('click', async () => {
+        const nextStatus = prompt('Статус заявки: new, in_progress, done', item.status || 'new');
+        if (!nextStatus) return;
+        const note = prompt('Комментарий менеджера (необязательно):', item.manager_note || '') || '';
+        try {
+          const res = await fetch(`/api/admin/requests/${item.id}/status`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: nextStatus.trim(), manager_note: note })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.message || 'Не удалось обновить статус');
+          await loadAdminRequests();
+        } catch (e) {
+          if (status) status.textContent = e.message || 'Ошибка обновления статуса';
+        }
+      });
+      actionsTd.appendChild(editBtn);
+      tr.appendChild(actionsTd);
+
       table.appendChild(tr);
     });
   };

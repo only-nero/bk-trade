@@ -100,6 +100,11 @@ form .form-grid + .btn { margin-top: .8rem; }
 .admin-grid{display:grid;gap:.8rem;max-width:520px}
 .admin-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 
+.status-badge{display:inline-flex;align-items:center;padding:.25rem .55rem;border-radius:999px;font-size:.8rem;font-weight:700;border:1px solid var(--border)}
+.status-new{background:color-mix(in srgb, #f59e0b 16%, transparent);color:#f59e0b}
+.status-in_progress{background:color-mix(in srgb, #38bdf8 16%, transparent);color:#38bdf8}
+.status-done{background:color-mix(in srgb, #22c55e 16%, transparent);color:#22c55e}
+
 .section > :is(.card, .grid, form, .table-wrap) + :is(.card, .grid, form, .table-wrap) { margin-top: 1rem; }
 
 @media (max-width:980px){

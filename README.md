@@ -93,7 +93,7 @@ curl http://localhost/api/health
 ## Внутренний кабинет заявок (операционный контур)
 
 - Страница: `http://localhost${ADMIN_UI_PATH}` (по умолчанию `/internal/ops-panel`)
-- API: `GET /api/admin/requests?limit=200`
+- API: `GET /api/admin/requests?limit=200`, `POST /api/admin/requests/:id/status`
 - Вход: `POST /api/admin/login` (логин/пароль из `.env`)
 - Сессия: HttpOnly cookie `bk_admin_sid` (SameSite=Strict, TTL настраивается)
 
@@ -253,3 +253,8 @@ curl -I http://localhost/assets/app.js
 - Проверка логина/пароля выполняется через timing-safe сравнение.
 - Старый очевидный путь `/admin/requests` отключён (возвращает 404), используется только `ADMIN_UI_PATH`.
 - Сессии админа не хранятся в `localStorage`, только в `HttpOnly` cookie.
+
+
+### Статусы заявок
+
+Для операционной работы менеджеров можно менять статус заявки: `new`, `in_progress`, `done`, а также сохранять короткую заметку менеджера.
