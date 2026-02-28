@@ -151,9 +151,16 @@ if (adminLoadBtn) {
         status.textContent = data.message || 'Ошибка доступа';
         return;
       }
-      table.innerHTML = data.items
-        .map((i) => `<tr><td>${i.id}</td><td>${i.created_at}</td><td>${i.name}</td><td>${i.phone}</td><td>${i.email || ''}</td><td>${i.item || ''}</td><td>${i.source || ''}</td></tr>`)
-        .join('');
+      table.innerHTML = '';
+      data.items.forEach((item) => {
+        const tr = document.createElement('tr');
+        [item.id, item.created_at, item.name, item.phone, item.email || '', item.item || '', item.source || ''].forEach((value) => {
+          const td = document.createElement('td');
+          td.textContent = String(value ?? '');
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
       status.textContent = `Загружено заявок: ${data.items.length}`;
     } catch (e) {
       status.textContent = 'Ошибка загрузки заявок';
@@ -234,3 +241,12 @@ if (heroGlow && !prefersReducedMotion) {
     });
   }, { passive: true });
 }
+
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  document.querySelectorAll('.dropdown.open').forEach((drop) => {
+    drop.classList.remove('open');
+    drop.querySelector('.dropdown-trigger')?.setAttribute('aria-expanded', 'false');
+  });
+});
