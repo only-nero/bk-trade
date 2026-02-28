@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Панель заявок — БК-Трейд</title>
+    <title>Панель менеджера — БК-Трейд</title>
     <link rel="stylesheet" href="/assets/styles.css" />
   </head>
   <body>
@@ -29,23 +29,52 @@
   </div>
 </header>
     <main class="container section">
-      <div class="breadcrumbs">Главная / Панель заявок</div>
-      <h1>Панель заявок</h1>
-      <p>Внутренний инструмент для оперативного просмотра входящих обращений.</p>
-      <div class="card">
-        <label>Admin API Token</label>
-        <input id="admin-token" placeholder="Введите токен доступа" />
-        <button id="load-requests" class="btn btn-primary" type="button" style="margin-top: .7rem">Загрузить заявки</button>
-        <p id="admin-status"></p>
-      </div>
-      <div class="card table-wrap" style="margin-top: 1rem">
-        <table>
-          <thead>
-            <tr><th>ID</th><th>Дата</th><th>Имя</th><th>Телефон</th><th>Email</th><th>Позиция</th><th>Источник</th></tr>
-          </thead>
-          <tbody id="requests-table"></tbody>
-        </table>
-      </div>
+      <div class="breadcrumbs">Главная / Панель менеджера</div>
+      <h1>Панель менеджера</h1>
+      <p>Защищённый доступ к входящим заявкам. Вход по логину/паролю из <code>.env</code>. Можно менять статус заявок и фиксировать заметки.</p>
+
+      <section id="admin-auth-card" class="card">
+        <h2>Вход в кабинет</h2>
+        <form id="admin-login-form" class="admin-grid" autocomplete="off">
+          <input name="username" placeholder="Логин" required />
+          <input name="password" type="password" placeholder="Пароль" required />
+          <button id="admin-login-btn" class="btn btn-primary" type="submit">Войти</button>
+          <p id="admin-status" class="form-message"></p>
+        </form>
+      </section>
+
+      <section id="admin-panel" class="hidden">
+        <div class="card">
+          <div class="admin-top">
+            <p><strong>Статус:</strong> <span id="admin-session-user">авторизован</span></p>
+            <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+              <button id="load-requests" class="btn btn-primary" type="button">Обновить заявки</button>
+              <button id="admin-logout" class="btn btn-ghost" type="button">Выйти</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:1rem">
+          <div id="admin-status-filters" class="status-filter-row">
+            <button type="button" class="btn btn-ghost active" data-filter="all">Все <span id="count-all">0</span></button>
+            <button type="button" class="btn btn-ghost" data-filter="new">Новые <span id="count-new">0</span></button>
+            <button type="button" class="btn btn-ghost" data-filter="in_progress">В работе <span id="count-in-progress">0</span></button>
+            <button type="button" class="btn btn-ghost" data-filter="done">Закрытые <span id="count-done">0</span></button>
+          </div>
+        </div>
+        <div class="card" style="margin-top:1rem">
+          <input id="admin-search" placeholder="Поиск по имени, телефону, email, позиции" />
+        </div>
+
+        <div class="card table-wrap" style="margin-top: 1rem">
+          <table>
+            <thead>
+              <tr><th>ID</th><th>Дата</th><th>Имя</th><th>Телефон</th><th>Email</th><th>Позиция</th><th>Источник</th><th>Статус</th><th>Действия</th></tr>
+            </thead>
+            <tbody id="requests-table"></tbody>
+          </table>
+        </div>
+      </section>
     </main>
     <script src="/assets/app.js"></script>
   </body>
