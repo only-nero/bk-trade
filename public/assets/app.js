@@ -4,6 +4,7 @@ const io = new IntersectionObserver(
       if (entry.isIntersecting) {
         entry.target.classList.add('in-view');
         if (entry.target.dataset.counter) animateCounter(entry.target);
+        io.unobserve(entry.target);
       }
     });
   },
@@ -40,7 +41,7 @@ document.querySelectorAll('.accordion-btn').forEach((btn) => {
 const filterInput = document.querySelector('#catalog-filter');
 if (filterInput) {
   filterInput.addEventListener('input', (e) => {
-    const value = e.target.value.toLowerCase();
+    const value = e.target.value.trim().toLowerCase();
     document.querySelectorAll('[data-category]').forEach((card) => {
       card.classList.toggle('hidden', !card.dataset.category.includes(value));
     });
@@ -60,18 +61,34 @@ document.querySelectorAll('[data-request-item]').forEach((btn) => {
 
 async function sendForm(form) {
   const data = Object.fromEntries(new FormData(form));
-  const res = await fetch('/api/requests', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+  const submitBtn = form.querySelector('button[type="submit"], button:not([type])');
+  const message = form.querySelector('.form-message');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.dataset.defaultText = submitBtn.dataset.defaultText || submitBtn.textContent;
+    submitBtn.textContent = 'Отправка...';
+  }
 
-  const payload = await res.json();
-  form.querySelector('.form-message').textContent = payload.message;
-  if (res.ok) form.reset();
+  try {
+    const res = await fetch('/api/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const payload = await res.json();
+    if (message) message.textContent = payload.message;
+    if (res.ok) form.reset();
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = submitBtn.dataset.defaultText;
+    }
+  }
 }
 
 document.querySelectorAll('form[data-api]').forEach((form) => {
+  form.querySelector('.form-message')?.setAttribute('aria-live', 'polite');
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     sendForm(form).catch(() => {
@@ -134,9 +151,16 @@ if (adminLoadBtn) {
         status.textContent = data.message || 'Ошибка доступа';
         return;
       }
-      table.innerHTML = data.items
-        .map((i) => `<tr><td>${i.id}</td><td>${i.created_at}</td><td>${i.name}</td><td>${i.phone}</td><td>${i.email || ''}</td><td>${i.item || ''}</td><td>${i.source || ''}</td></tr>`)
-        .join('');
+      table.innerHTML = '';
+      data.items.forEach((item) => {
+        const tr = document.createElement('tr');
+        [item.id, item.created_at, item.name, item.phone, item.email || '', item.item || '', item.source || ''].forEach((value) => {
+          const td = document.createElement('td');
+          td.textContent = String(value ?? '');
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
       status.textContent = `Загружено заявок: ${data.items.length}`;
     } catch (e) {
       status.textContent = 'Ошибка загрузки заявок';
@@ -163,3 +187,131 @@ document.addEventListener('click', (e) => {
     }
   });
 });
+
+const progress = document.querySelector('#scroll-progress');
+if (progress) {
+  let ticking = false;
+  const updateProgress = () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const ratio = max > 0 ? (window.scrollY / max) * 100 : 0;
+    progress.style.transform = `scaleX(${Math.min(100, Math.max(0, ratio)) / 100})`;
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateProgress);
+      ticking = true;
+    }
+  }, { passive: true });
+  updateProgress();
+}
+
+const rotator = document.querySelector('[data-rotator]');
+if (rotator) {
+  const items = (rotator.dataset.items || '')
+    .split('|')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  let index = 0;
+  if (items.length) {
+    rotator.textContent = items[0];
+    setInterval(() => {
+      index = (index + 1) % items.length;
+      rotator.classList.remove('visible');
+      requestAnimationFrame(() => {
+        rotator.textContent = items[index];
+        rotator.classList.add('visible');
+      });
+    }, 3000);
+  }
+}
+
+const heroGlow = document.querySelector('[data-hero-glow]');
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (heroGlow && !prefersReducedMotion) {
+  let frame = null;
+  window.addEventListener('pointermove', (e) => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      heroGlow.style.setProperty('--pointer-x', `${x}%`);
+      heroGlow.style.setProperty('--pointer-y', `${y}%`);
+      frame = null;
+    });
+  }, { passive: true });
+}
+
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  document.querySelectorAll('.dropdown.open').forEach((drop) => {
+    drop.classList.remove('open');
+    drop.querySelector('.dropdown-trigger')?.setAttribute('aria-expanded', 'false');
+  });
+  const chat = document.querySelector('#manager-chat-widget.open');
+  if (chat) {
+    chat.classList.remove('open');
+    chat.querySelector('.manager-chat-toggle')?.setAttribute('aria-expanded', 'false');
+    chat.querySelector('#manager-chat-panel')?.setAttribute('aria-hidden', 'true');
+  }
+});
+
+
+function initManagerChat() {
+  if (document.body.dataset.managerChatReady === '1') return;
+  if (document.querySelector('#manager-chat-widget') || location.pathname.includes('/internal/ops-panel')) return;
+
+  document.body.dataset.managerChatReady = '1';
+  document.body.insertAdjacentHTML('beforeend', `
+    <div id="manager-chat-widget" class="manager-chat" aria-live="polite">
+      <button type="button" class="manager-chat-toggle btn btn-primary" aria-expanded="false" aria-controls="manager-chat-panel">
+        <span class="manager-chat-dot" aria-hidden="true"></span>
+        Чат с менеджером
+      </button>
+      <section id="manager-chat-panel" class="manager-chat-panel card" aria-hidden="true">
+        <header class="manager-chat-head">
+          <strong>Менеджер БК-Трейд онлайн</strong>
+          <button type="button" class="manager-chat-close" aria-label="Закрыть чат">✕</button>
+        </header>
+        <p class="manager-chat-hint">Обычно отвечаем в течение 10–15 минут. Оставьте контакты — перезвоним быстрее.</p>
+        <form class="manager-chat-form" novalidate>
+          <input type="hidden" name="source" value="Виджет: чат с менеджером" />
+          <input type="hidden" name="website" value="" />
+          <input name="name" placeholder="Ваше имя" required />
+          <input name="phone" placeholder="Телефон" required />
+          <textarea name="message" rows="3" placeholder="Что требуется поставить?" required></textarea>
+          <button class="btn btn-primary" type="submit">Отправить менеджеру</button>
+          <p class="form-message"></p>
+        </form>
+      </section>
+    </div>
+  `);
+
+  const wrap = document.querySelector('#manager-chat-widget');
+  const toggle = wrap?.querySelector('.manager-chat-toggle');
+  const panel = wrap?.querySelector('#manager-chat-panel');
+  const close = wrap?.querySelector('.manager-chat-close');
+  const form = wrap?.querySelector('.manager-chat-form');
+
+  const setOpen = (open) => {
+    wrap?.classList.toggle('open', open);
+    toggle?.setAttribute('aria-expanded', String(open));
+    panel?.setAttribute('aria-hidden', String(!open));
+  };
+
+  toggle?.addEventListener('click', () => setOpen(!wrap.classList.contains('open')));
+  close?.addEventListener('click', () => setOpen(false));
+
+  form?.querySelector('.form-message')?.setAttribute('aria-live', 'polite');
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    sendForm(form).then(() => {
+      if (form.querySelector('.form-message')?.textContent) setOpen(true);
+    }).catch(() => {
+      form.querySelector('.form-message').textContent = 'Сбой отправки. Напишите нам по телефону +7 (3452) 66-12-30.';
+    });
+  });
+}
+
+initManagerChat();
