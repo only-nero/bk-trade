@@ -29,7 +29,7 @@ cp .env.example .env
 Отредактируйте `.env` обязательно:
 
 - `PUBLIC_URL`
-- `ADMIN_API_TOKEN` (сложный токен)
+- `ADMIN_USERNAME` и `ADMIN_PASSWORD` (сильные значения)
 - SMTP-параметры (если нужна реальная отправка email)
 
 ### 2) Запуск dev-стека
@@ -94,13 +94,15 @@ curl http://localhost/api/health
 
 - Страница: `http://localhost${ADMIN_UI_PATH}` (по умолчанию `/internal/ops-panel`)
 - API: `GET /api/admin/requests?limit=200`
-- Доступ: header `x-admin-token: <ADMIN_API_TOKEN>`
+- Вход: `POST /api/admin/login` (логин/пароль из `.env`)
+- Сессия: HttpOnly cookie `bk_admin_sid` (SameSite=Strict, TTL настраивается)
 
 Пример:
 
 ```bash
-curl http://localhost/api/admin/requests?limit=50 \
-  -H "x-admin-token: <your-token>"
+curl -X POST http://localhost/api/admin/login \
+  -H "content-type: application/json" \
+  --data "{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\"}"
 ```
 
 ---
@@ -112,8 +114,10 @@ curl http://localhost/api/admin/requests?limit=50 \
 - `PUBLIC_URL` — базовый URL для sitemap/robots
 - `DB_FILE` — путь до SQLite
 - `MAIL_FROM`, `MAIL_TO` — email уведомления
-- `ADMIN_API_TOKEN` — токен для внутреннего admin API
 - `ADMIN_UI_PATH` — нестандартный путь к странице менеджера/админ-панели
+- `ADMIN_USERNAME`, `ADMIN_PASSWORD` — учётные данные входа в админ-кабинет
+- `ADMIN_SESSION_TTL_MIN` — время жизни сессии админа в минутах
+- `ADMIN_COOKIE_SECURE` — принудительный Secure-флаг для admin cookie
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` — SMTP
 
 ---
@@ -166,7 +170,7 @@ sudo ss -ltnp 'sport = :80'
 
 ### 401 в admin API
 
-Проверьте `ADMIN_API_TOKEN` в `.env` и заголовок `x-admin-token`.
+Проверьте `ADMIN_USERNAME`/`ADMIN_PASSWORD` в `.env`, что вход выполнен на странице `ADMIN_UI_PATH`, и не истекла admin-сессия.
 
 ---
 
@@ -240,5 +244,12 @@ curl -I http://localhost/assets/app.js
 ### Рекомендация для доступа менеджера
 
 - Не используйте стандартный путь вроде `/admin` — задайте уникальный `ADMIN_UI_PATH`.
-- Держите `ADMIN_API_TOKEN` длинным (32+ символа) и меняйте его регулярно.
+- Используйте длинный `ADMIN_PASSWORD` и меняйте его регулярно.
 - Для боевого контура лучше ограничить доступ к admin UI по IP на уровне Nginx/VPN.
+
+
+### Усиление безопасности админ-кабинета
+
+- Проверка логина/пароля выполняется через timing-safe сравнение.
+- Старый очевидный путь `/admin/requests` отключён (возвращает 404), используется только `ADMIN_UI_PATH`.
+- Сессии админа не хранятся в `localStorage`, только в `HttpOnly` cookie.

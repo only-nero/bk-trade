@@ -137,35 +137,108 @@ document.querySelector('#cookie-ok')?.addEventListener('click', () => {
 });
 
 const adminLoadBtn = document.querySelector('#load-requests');
-if (adminLoadBtn) {
-  adminLoadBtn.addEventListener('click', async () => {
-    const token = document.querySelector('#admin-token')?.value || '';
-    const status = document.querySelector('#admin-status');
-    const table = document.querySelector('#requests-table');
+const adminLoginForm = document.querySelector('#admin-login-form');
+if (adminLoadBtn || adminLoginForm) {
+  const status = document.querySelector('#admin-status');
+  const table = document.querySelector('#requests-table');
+  const adminPanel = document.querySelector('#admin-panel');
+  const authCard = document.querySelector('#admin-auth-card');
+  const sessionUser = document.querySelector('#admin-session-user');
+
+  const renderRows = (items) => {
+    table.innerHTML = '';
+    items.forEach((item) => {
+      const tr = document.createElement('tr');
+      [item.id, item.created_at, item.name, item.phone, item.email || '', item.item || '', item.source || ''].forEach((value) => {
+        const td = document.createElement('td');
+        td.textContent = String(value ?? '');
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+  };
+
+  const setAuthorized = (isAuthorized, username = '') => {
+    authCard?.classList.toggle('hidden', isAuthorized);
+    adminPanel?.classList.toggle('hidden', !isAuthorized);
+    if (sessionUser && username) sessionUser.textContent = username;
+  };
+
+  const loadAdminRequests = async () => {
+    const res = await fetch('/api/admin/requests?limit=200', { credentials: 'same-origin' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Ошибка доступа');
+    renderRows(data.items || []);
+    if (status) status.textContent = `Загружено заявок: ${data.items.length}`;
+  };
+
+  const checkSession = async () => {
     try {
-      const res = await fetch('/api/admin/requests?limit=200', {
-        headers: { 'x-admin-token': token }
+      const res = await fetch('/api/admin/me', { credentials: 'same-origin' });
+      if (!res.ok) {
+        setAuthorized(false);
+        return;
+      }
+      const data = await res.json();
+      setAuthorized(true, data.username || 'менеджер');
+      await loadAdminRequests();
+    } catch {
+      setAuthorized(false);
+    }
+  };
+
+  adminLoginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submit = adminLoginForm.querySelector('button[type="submit"]');
+    const payload = Object.fromEntries(new FormData(adminLoginForm));
+    if (submit) {
+      submit.disabled = true;
+      submit.dataset.defaultText = submit.dataset.defaultText || submit.textContent;
+      submit.textContent = 'Вход...';
+    }
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok) {
-        status.textContent = data.message || 'Ошибка доступа';
+        if (status) status.textContent = data.message || 'Ошибка входа';
         return;
       }
-      table.innerHTML = '';
-      data.items.forEach((item) => {
-        const tr = document.createElement('tr');
-        [item.id, item.created_at, item.name, item.phone, item.email || '', item.item || '', item.source || ''].forEach((value) => {
-          const td = document.createElement('td');
-          td.textContent = String(value ?? '');
-          tr.appendChild(td);
-        });
-        table.appendChild(tr);
-      });
-      status.textContent = `Загружено заявок: ${data.items.length}`;
-    } catch (e) {
-      status.textContent = 'Ошибка загрузки заявок';
+      if (status) status.textContent = 'Вход выполнен успешно.';
+      setAuthorized(true, data.username || payload.username || 'менеджер');
+      await loadAdminRequests();
+      adminLoginForm.reset();
+    } catch {
+      if (status) status.textContent = 'Ошибка соединения. Попробуйте позже.';
+    } finally {
+      if (submit) {
+        submit.disabled = false;
+        submit.textContent = submit.dataset.defaultText;
+      }
     }
   });
+
+  adminLoadBtn?.addEventListener('click', () => {
+    loadAdminRequests().catch((e) => {
+      if (status) status.textContent = e.message || 'Ошибка загрузки заявок';
+    });
+  });
+
+  document.querySelector('#admin-logout')?.addEventListener('click', async () => {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' });
+    } finally {
+      setAuthorized(false);
+      if (status) status.textContent = 'Вы вышли из кабинета.';
+      table.innerHTML = '';
+    }
+  });
+
+  checkSession();
 }
 
 

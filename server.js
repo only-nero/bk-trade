@@ -40,6 +40,52 @@ const safeTokenEqual = (left = '', right = '') => {
 };
 
 const enableHttpsHeaders = String(process.env.ENABLE_HTTPS_HEADERS || 'false') === 'true';
+const adminUser = String(process.env.ADMIN_USERNAME || '').trim();
+const adminPass = String(process.env.ADMIN_PASSWORD || '').trim();
+const adminSessionTtlMs = Math.max(10, Number(process.env.ADMIN_SESSION_TTL_MIN || 480)) * 60 * 1000;
+const adminCookieName = 'bk_admin_sid';
+const adminCookieSecure = String(process.env.ADMIN_COOKIE_SECURE || String(enableHttpsHeaders)) === 'true';
+const adminSessions = new Map();
+
+const parseCookies = (cookieHeader = '') => Object.fromEntries(
+  String(cookieHeader || '')
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const [key, ...rest] = part.split('=');
+      return [key, decodeURIComponent(rest.join('=') || '')];
+    })
+);
+
+const getAdminSession = (req) => {
+  const sid = parseCookies(req.get('cookie') || '')[adminCookieName];
+  if (!sid) return null;
+  const item = adminSessions.get(sid);
+  if (!item) return null;
+  if (item.expiresAt < Date.now()) {
+    adminSessions.delete(sid);
+    return null;
+  }
+  return { sid, ...item };
+};
+
+const createAdminSession = (username) => {
+  const sid = crypto.randomBytes(32).toString('hex');
+  const now = Date.now();
+  adminSessions.set(sid, { username, createdAt: now, expiresAt: now + adminSessionTtlMs });
+  return sid;
+};
+
+const adminCookie = (sid, maxAgeSec = Math.floor(adminSessionTtlMs / 1000)) => `${adminCookieName}=${encodeURIComponent(sid)}; Path=/api/admin; HttpOnly; SameSite=Strict; Max-Age=${maxAgeSec}${adminCookieSecure ? '; Secure' : ''}`;
+
+const requireAdminSession = (req, res, next) => {
+  const session = getAdminSession(req);
+  if (!session) return res.status(401).json({ message: 'Unauthorized' });
+  req.adminSession = session;
+  res.setHeader('Cache-Control', 'no-store');
+  return next();
+};
 
 app.use(
   helmet({
@@ -85,6 +131,13 @@ const adminLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Слишком много запросов к административному API.' }
+});
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 12,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Слишком много попыток входа. Попробуйте позже.' }
 });
 
 app.use('/api', apiLimiter);
@@ -197,13 +250,40 @@ app.post('/api/requests', formLimiter, (req, res) => {
   return res.json({ message: 'Спасибо! Заявка принята, менеджер свяжется с вами в течение часа.' });
 });
 
-app.get('/api/admin/requests', adminLimiter, (req, res) => {
-  const token = String(req.get('x-admin-token') || '');
-  if (!process.env.ADMIN_API_TOKEN || !safeTokenEqual(token, process.env.ADMIN_API_TOKEN)) {
-    return res.status(401).json({ message: 'Unauthorized' });
+app.post('/api/admin/login', adminLoginLimiter, (req, res) => {
+  if (!adminUser || !adminPass) {
+    return res.status(503).json({ message: 'Админ-доступ не настроен на сервере.' });
   }
 
+  const username = String(req.body?.username || '').trim();
+  const password = String(req.body?.password || '');
+  const validUser = safeTokenEqual(username, adminUser);
+  const validPass = safeTokenEqual(password, adminPass);
+
+  if (!validUser || !validPass) {
+    return res.status(401).json({ message: 'Неверный логин или пароль.' });
+  }
+
+  const sid = createAdminSession(username);
+  res.setHeader('Set-Cookie', adminCookie(sid));
+  res.setHeader('Cache-Control', 'no-store');
+  return res.json({ message: 'Вход выполнен.', username });
+});
+
+app.post('/api/admin/logout', adminLimiter, requireAdminSession, (req, res) => {
+  adminSessions.delete(req.adminSession.sid);
+  res.setHeader('Set-Cookie', adminCookie('', 0));
+  res.setHeader('Cache-Control', 'no-store');
+  return res.json({ message: 'Вы вышли из кабинета.' });
+});
+
+app.get('/api/admin/me', adminLimiter, requireAdminSession, (req, res) => {
+  return res.json({ username: req.adminSession.username, expiresAt: req.adminSession.expiresAt });
+});
+
+app.get('/api/admin/requests', adminLimiter, requireAdminSession, (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit || 50), 1), 500);
+  res.setHeader('Cache-Control', 'no-store');
   return res.json({ items: listStmt.all(limit) });
 });
 
